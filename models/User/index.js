@@ -18,6 +18,7 @@ const userSchema = new mongoose.Schema(
         country: String,
       },
       unique: true,
+      select: false,
     },
     email: {
       type: String,
@@ -30,10 +31,6 @@ const userSchema = new mongoose.Schema(
     },
     profilepics: {
       type: [String],
-    },
-
-    perhour: {
-      type: Number,
     },
 
     description: {
@@ -49,6 +46,7 @@ const userSchema = new mongoose.Schema(
       enum: ["male", "female", "other"],
     },
     password: {
+      select: false,
       type: String,
     },
     city: {
@@ -79,10 +77,14 @@ const userSchema = new mongoose.Schema(
     randString: String,
     isAdmin: {
       type: Boolean,
+      select: false,
       default: false,
     },
+    suspended: { type: Boolean, default: false },
     verified: {
+      select: false,
       type: Boolean,
+
       default: false,
     },
   },
@@ -94,5 +96,14 @@ userSchema.pre("save", async function (next) {
   this.password = await hash(this.password, 10);
   next();
 });
-const User = mongoose.model("User", userSchema);
-module.exports = User;
+userSchema.pre(
+  ["updateOne", "findOneAndUpdate", "findByIdAndUpdate"],
+  function (next) {
+    console.log(this.getFilter());
+    next();
+  }
+);
+userSchema.pre(["update,updateMany"], function (next) {
+  next();
+});
+module.exports = mongoose.model("User", userSchema);

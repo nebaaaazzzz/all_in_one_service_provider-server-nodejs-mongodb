@@ -7,7 +7,7 @@ opts.jwtFromRequest = ExtractJwt.fromAuthHeaderAsBearerToken();
 opts.secretOrKey = process.env.SECRETE;
 passport.use(
   new JwtStrategy(opts, function (jwt_payload, done) {
-    User.findById(jwt_payload.sub, function (err, user) {
+    User.findById(jwt_payload.sub, "+isAdmin +verified", function (err, user) {
       if (err) {
         return done(err, false);
       }
