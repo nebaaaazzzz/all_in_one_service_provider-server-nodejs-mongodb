@@ -14,7 +14,7 @@ const lesserRouter = require("./routes/lesser");
 const adminRouter = require("./routes/admin");
 
 /*connect database */
-mongoose.connect(process.env.MONGODB_LOCAL_URL, (err) => {
+mongoose.connect(process.env.MONGODB_URL, (err) => {
   if (err) {
     throw err;
   } else {
