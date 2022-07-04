@@ -14,7 +14,7 @@ const lesserRouter = require("./routes/lesser");
 const adminRouter = require("./routes/admin");
 
 /*connect database */
-mongoose.connect(process.env.MONGODB_URL, (err) => {
+mongoose.connect(process.env.MONGODB_LOCAL_URL, (err) => {
   if (err) {
     throw err;
   } else {
@@ -24,7 +24,7 @@ mongoose.connect(process.env.MONGODB_URL, (err) => {
 mongoose.set("returnOriginal", false);
 const isSuspended = (req, res, next) => {
   if (!req.user.suspended) {
-    next();
+    return next();
   }
   next(new ErrorHandler("suspended Accout", 401));
 };
@@ -76,7 +76,10 @@ app.use(limiter);
 /*passport */
 const passport = require("passport");
 app.use(passport.initialize());
-
+app.post("/", (req, res) => {
+  console.log("requrest");
+  res.send("hello wrold");
+});
 /*route */
 require("./config/passport");
 app.use("/auth", authRouter);
@@ -85,7 +88,7 @@ app.use("/user", isVerified, userRouter);
 app.use("/employer", isVerified, employerRouter);
 app.use("/employee", isVerified, employeeRouter);
 app.use("/lesse", isVerified, lesseRouter);
-app.use("/lessor", isVerified, lesserRouter);
+app.use("/lesser", isVerified, lesserRouter);
 app.use("/admin", isVerified, isAdmin, adminRouter);
 module.exports = {
   app,

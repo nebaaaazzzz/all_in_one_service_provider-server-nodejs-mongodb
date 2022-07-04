@@ -32,9 +32,7 @@ const houseSchema = new mongoose.Schema(
       type: pointSchema,
       required: true,
     },
-    uri: image.uri,
-    name: "image",
-    type: "image/jpg",
+
     placeKind: {
       type: String,
       required: true,

@@ -5,6 +5,7 @@ const storage = multer.diskStorage({
     cb(null, path.join(__dirname, "./../upload"));
   },
   filename: function (req, file, cb) {
+    //to get file extension path.extname
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(
       null,
@@ -15,9 +16,9 @@ const storage = multer.diskStorage({
 const upload = multer({
   storage: storage,
   limits: {
-    fields: 0,
-    file: 1,
-    fileSize: 1000024,
+    fields: 20,
+    file: 5,
+    fileSize: 1e7,
   },
 });
 module.exports = upload;

@@ -3,8 +3,9 @@ const dotenv = require("dotenv");
 dotenv.config();
 const app = require("./app.js").app;
 const server = http.createServer(app);
-
+const os = require("os");
 const PORT = process.env.PORT || 3000;
-server.listen(PORT, () => {
-  console.log(`listening on *:${PORT}`);
+// server.listen(PORT , )
+server.listen(PORT, os.networkInterfaces().wlo1[0].address, () => {
+  console.log(`listening on *${server.address().address}:${PORT}`);
 });
