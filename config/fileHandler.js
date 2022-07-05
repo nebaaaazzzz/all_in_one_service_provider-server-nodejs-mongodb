@@ -1,24 +1,28 @@
 const multer = require("multer");
 const path = require("path");
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, "./../upload"));
-  },
-  filename: function (req, file, cb) {
-    //to get file extension path.extname
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(
-      null,
-      file.fieldname + "-" + uniqueSuffix + "." + file.mimetype.split("/")[1]
-    );
+const crypto = require("crypto");
+
+const { GridFsStorage } = require("multer-gridfs-storage");
+const storage = new GridFsStorage({
+  url: process.env.MONGODB_LOCAL_URL,
+  file: (req, file) => {
+    return new Promise((resolve, reject) => {
+      crypto.randomBytes(16, (err, buf) => {
+        if (err) {
+          return reject(err);
+        }
+        const filename = buf.toString("hex") + path.extname(file.originalname);
+        const fileInfo = {
+          filename: filename,
+          bucketName: "uploads",
+        };
+        resolve(fileInfo);
+      });
+    });
   },
 });
 const upload = multer({
-  storage: storage,
-  limits: {
-    fields: 20,
-    file: 5,
-    fileSize: 1e7,
-  },
+  storage,
+  limits: { fileSize: 100e20, fieldSize: 100000e20 },
 });
 module.exports = upload;

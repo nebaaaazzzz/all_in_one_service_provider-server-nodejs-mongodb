@@ -1,15 +1,20 @@
 const mongoose = require("mongoose");
-const pointSchema = new mongoose.Schema({
-  type: {
-    type: String,
-    enum: ["Point"],
-    required: true,
+const pointSchema = new mongoose.Schema(
+  {
+    type: {
+      type: String,
+      enum: ["Point"],
+      required: true,
+    },
+    coordinates: {
+      type: [Number],
+      required: true,
+    },
   },
-  coordinates: {
-    type: [Number],
-    required: true,
-  },
-});
+  {
+    id: false,
+  }
+);
 
 const houseSchema = new mongoose.Schema(
   {
@@ -19,14 +24,12 @@ const houseSchema = new mongoose.Schema(
     
     */
     placeDescription: {
-      title: {
-        type: String,
-        lowercase: true,
-      },
-      description: {
-        type: String,
-        lowercase: true,
-      },
+      title: String,
+      description: String,
+    },
+    user: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
     },
     location: {
       type: pointSchema,
@@ -54,7 +57,7 @@ const houseSchema = new mongoose.Schema(
     },
     amenities: { type: [String], required: true },
     propertyType: {
-      type: [String],
+      type: String,
       required: true,
     },
     houseImages: {
@@ -62,7 +65,7 @@ const houseSchema = new mongoose.Schema(
       required: true,
     },
     placeTitle: { type: String, require: true },
-    placeDescription: {
+    detailDescription: {
       type: String,
       required: true,
     },

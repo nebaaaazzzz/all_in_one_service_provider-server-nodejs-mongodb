@@ -3,7 +3,6 @@ const express = require("express");
 const app = express();
 
 const ErrorHandler = require("./utils/ErrorHandler");
-
 //routes
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
@@ -12,9 +11,10 @@ const employeeRouter = require("./routes/employee");
 const lesseRouter = require("./routes/lesse");
 const lesserRouter = require("./routes/lesser");
 const adminRouter = require("./routes/admin");
+/* */
 
 /*connect database */
-mongoose.connect(process.env.MONGODB_URL, (err) => {
+mongoose.connect(process.env.MONGODB_LOCAL_URL, (err) => {
   if (err) {
     throw err;
   } else {
@@ -28,6 +28,8 @@ const isSuspended = (req, res, next) => {
   }
   next(new ErrorHandler("suspended Accout", 401));
 };
+const upload = require("./config/fileHandler");
+
 const isVerified = (req, res, next) => {
   if (req.user.verified) {
     next();
@@ -76,10 +78,7 @@ app.use(limiter);
 /*passport */
 const passport = require("passport");
 app.use(passport.initialize());
-app.post("/", (req, res) => {
-  console.log("requrest");
-  res.send("hello wrold");
-});
+
 /*route */
 require("./config/passport");
 app.use("/auth", authRouter);
