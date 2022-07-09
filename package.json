@@ -37,6 +37,7 @@
     "ratelimiter": "^3.4.1",
     "socket.io": "^4.5.1",
     "validator": "^13.7.0",
+    "yenepaysdk": "^1.2.0",
     "yup": "^0.32.11"
   },
   "devDependencies": {

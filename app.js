@@ -1,6 +1,8 @@
 const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
+const mongodb = require("mongodb");
+const bucket = require("./config/db");
 
 const ErrorHandler = require("./utils/ErrorHandler");
 //routes
@@ -8,20 +10,15 @@ const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
 const employerRouter = require("./routes/employer");
 const employeeRouter = require("./routes/employee");
-const lesseRouter = require("./routes/lesse");
+const lesseeRouter = require("./routes/lessee");
 const lesserRouter = require("./routes/lesser");
 const adminRouter = require("./routes/admin");
+const paymentRouter = require("./routes/payment");
 /* */
 
 /*connect database */
-mongoose.connect(process.env.MONGODB_LOCAL_URL, (err) => {
-  if (err) {
-    throw err;
-  } else {
-    console.log("mongodb database connected");
-  }
-});
-mongoose.set("returnOriginal", false);
+require("./config/db");
+/* */
 const isSuspended = (req, res, next) => {
   if (!req.user.suspended) {
     return next();
@@ -68,12 +65,29 @@ Content-Security-Policy
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  max: 10000, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 // Apply the rate limiting middleware to all requests
 app.use(limiter);
+/* getting house image*/
+app.get("/house/image/:id", async (req, res, next) => {
+  // res.sendFile(path.join(__dirname, "./../../User_Icon.png"));
+  const cursor = await bucket.find({
+    _id: new mongoose.Types.ObjectId(req.params.id),
+  });
+  const files = await cursor.toArray();
+  if (files.length) {
+    files.forEach((doc) => {
+      res.set("Content-Type", doc.contentType);
+      res.set("Content-Length", doc.length);
+      bucket.openDownloadStream(doc._id).pipe(res);
+    });
+    return;
+  }
+  next(new ErrorHandler("notfound image", 404));
+});
 
 /*passport */
 const passport = require("passport");
@@ -86,9 +100,10 @@ app.use("/", passport.authenticate("jwt", { session: false }), isSuspended);
 app.use("/user", isVerified, userRouter);
 app.use("/employer", isVerified, employerRouter);
 app.use("/employee", isVerified, employeeRouter);
-app.use("/lesse", isVerified, lesseRouter);
+app.use("/lessee", isVerified, lesseeRouter);
 app.use("/lesser", isVerified, lesserRouter);
 app.use("/admin", isVerified, isAdmin, adminRouter);
+app.use("/payment", paymentRouter);
 module.exports = {
   app,
 };

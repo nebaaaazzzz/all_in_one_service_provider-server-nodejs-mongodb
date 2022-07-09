@@ -1,28 +1,51 @@
 const mongoose = require("mongoose");
+const pointSchema = require("./../schemas/locationschema");
 const jobSchema = new mongoose.Schema(
   {
     title: {
       type: String,
+      required: true,
       minlength: 5,
-      maxlength: 50,
     },
-    company: {
-      type: String,
+    budget: {
+      from: Number,
+      to: Number,
     },
-    qty: String,
+    quantity: Number,
     gender: {
       type: String,
+      enum: ["male", "female"],
+      lowercase: true,
     },
-    typed: {
+    type: {
       type: String,
       minlength: 5,
       maxlength: 50,
       enum: ["permanent"],
     },
-    catagory: {
+    size: {
+      description: String,
+      title: String,
+    },
+    category: {
       type: String,
     },
-    salary: String,
+    experience: {
+      descritption: String,
+      title: String,
+    },
+    level: String,
+    placeName: String,
+    skills: [String],
+    specificCategory: String,
+    salary: {
+      type: Number,
+      min: 0,
+    },
+    englishLevel: String,
+    hourPerWeek: String,
+    document: String,
+    screeningQuestion: [String],
     deadline: Date,
     description: {
       type: String,
@@ -34,8 +57,12 @@ const jobSchema = new mongoose.Schema(
       default: false,
     },
     user: {
-      type: mongoose.Schema.Types.ObjectId,
+      type: mongoose.Types.ObjectId,
       ref: "User",
+    },
+    location: {
+      type: pointSchema,
+      required: true,
     },
   },
   {

@@ -1,13 +1,12 @@
 const route = require("express").Router();
-const Job = require("../../models/Job");
-
+const House = require("../../models/House");
 route.get("/", async (req, res, next) => {
   const query = req.query;
-  const jobQuery = Job.find();
+  const houseQuery = House.find();
   const page = query.page > 1 ? query.page : 1;
   const size = 5;
-  const jobs = await jobQuery.skip((page - 1) * size).limit(size);
-  res.send(jobs);
+  const houses = await houseQuery.skip((page - 1) * size).limit(size);
+  res.send(houses);
   // .where({ price: { $gte: 21, $lte: 65 } })
   // .where({ placetype: "full" })
   // .where({ bedrooms: 3 })
@@ -20,5 +19,4 @@ route.get("/", async (req, res, next) => {
   /*who is comming -adults(13>) children(2-12) infant(<2) pets*/
   /*where - city */
 });
-route.post("/apply-job", (req, res) => {});
 module.exports = route;
