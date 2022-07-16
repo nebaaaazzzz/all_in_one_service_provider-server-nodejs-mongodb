@@ -1,5 +1,5 @@
-const upload = require("../../config/fileHandler");
-const bucket = require("../../config/db");
+const upload = require("../../config/fileHandler")();
+const bucket = require("../../config/db")();
 const route = require("express").Router();
 const House = require("./../../models/House");
 const { default: mongoose } = require("mongoose");

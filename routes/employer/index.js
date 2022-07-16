@@ -1,7 +1,7 @@
 const route = require("express").Router();
 const Job = require("./../../models/Job");
-const upload = require("../../config/fileHandler");
-const bucket = require("../../config/db");
+const upload = require("../../config/fileHandler")();
+const bucket = require("../../config/db")();
 
 route.post("/postjob", upload.single("document"), async (req, res) => {
   const obj = JSON.parse(req.body.body);
@@ -42,6 +42,4 @@ route.get("/posts", async (req, res) => {
   res.send(jobs);
 });
 
-route.patch("/update-job/:id", async (req, res) => {});
-route.post("/approve-user", async (req, res) => {});
 module.exports = route;

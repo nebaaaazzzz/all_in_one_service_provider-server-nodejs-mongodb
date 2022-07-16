@@ -10,9 +10,7 @@ const pointSchema = new mongoose.Schema(
       type: [Number],
       required: true,
     },
-    city: String,
     region: String,
-    country: String,
   },
 
   {

@@ -3,11 +3,13 @@ const {
   IPNDestination,
   PaymentSuccessReturnUrl,
   PaymentCancelReturnUrl,
+  PaymentFailureUrl,
 } = require("./../../controller/paymentController");
 const route = require("express").Router();
-route.post("/CheckoutExpress", CheckoutExpress);
-route.post("/IPNDestination", IPNDestination);
-route.get("/PaymentSuccessReturnUrl", PaymentSuccessReturnUrl);
-route.get("/PaymentCancelReturnUrl", PaymentCancelReturnUrl);
+route.get("/CheckoutExpress", CheckoutExpress);
+route.get("/IPNDestination", IPNDestination);
+route.get("/SuccessReturnUrl", PaymentSuccessReturnUrl);
+route.get("/CancelReturnUrl", PaymentCancelReturnUrl);
+route.get("/failureReturnUrl", PaymentFailureUrl);
 
 module.exports = route;

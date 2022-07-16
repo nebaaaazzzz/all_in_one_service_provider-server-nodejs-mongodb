@@ -20,5 +20,15 @@ route.get("/", async (req, res, next) => {
   /*who is comming -adults(13>) children(2-12) infant(<2) pets*/
   /*where - city */
 });
+route.get("/job/:id", async (req, res) => {
+  const job = await Job.findById(req.params.id);
+  if (!job) {
+    return next(new ErrorHandler("house not found", 404));
+  }
+  res.send({
+    success: true,
+    data: job,
+  });
+});
 route.post("/apply-job", (req, res) => {});
 module.exports = route;

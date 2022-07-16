@@ -2,18 +2,20 @@ const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
 const mongodb = require("mongodb");
-const bucket = require("./config/db");
+const bucket = require("./config/db")();
 
 const ErrorHandler = require("./utils/ErrorHandler");
 //routes
 const authRouter = require("./routes/auth");
 const userRouter = require("./routes/user");
+const commonRouter = require("./routes/common");
 const employerRouter = require("./routes/employer");
 const employeeRouter = require("./routes/employee");
 const lesseeRouter = require("./routes/lessee");
 const lesserRouter = require("./routes/lesser");
 const adminRouter = require("./routes/admin");
 const paymentRouter = require("./routes/payment");
+
 /* */
 
 /*connect database */
@@ -88,22 +90,25 @@ app.get("/house/image/:id", async (req, res, next) => {
   }
   next(new ErrorHandler("notfound image", 404));
 });
-
 /*passport */
 const passport = require("passport");
 app.use(passport.initialize());
 
 /*route */
 require("./config/passport");
+
 app.use("/auth", authRouter);
 app.use("/", passport.authenticate("jwt", { session: false }), isSuspended);
-app.use("/user", isVerified, userRouter);
-app.use("/employer", isVerified, employerRouter);
-app.use("/employee", isVerified, employeeRouter);
-app.use("/lessee", isVerified, lesseeRouter);
-app.use("/lesser", isVerified, lesserRouter);
-app.use("/admin", isVerified, isAdmin, adminRouter);
+app.use(isVerified);
+app.use("/", commonRouter);
+app.use("/user", userRouter);
+app.use("/employer", employerRouter);
+app.use("/employee", employeeRouter);
+app.use("/lessee", lesseeRouter);
+app.use("/lesser", lesserRouter);
+app.use("/admin", isAdmin, adminRouter);
 app.use("/payment", paymentRouter);
+
 module.exports = {
   app,
 };

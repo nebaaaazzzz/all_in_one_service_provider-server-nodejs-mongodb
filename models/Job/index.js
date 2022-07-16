@@ -7,6 +7,7 @@ const jobSchema = new mongoose.Schema(
       required: true,
       minlength: 5,
     },
+
     budget: {
       from: Number,
       to: Number,
@@ -14,47 +15,37 @@ const jobSchema = new mongoose.Schema(
     quantity: Number,
     gender: {
       type: String,
-      enum: ["male", "female"],
+      enum: ["male", "female", "both"],
       lowercase: true,
     },
-    type: {
-      type: String,
-      minlength: 5,
-      maxlength: 50,
-      enum: ["permanent"],
+
+    permanent: {
+      type: Boolean,
+      default: false,
     },
-    size: {
-      description: String,
-      title: String,
-    },
+
     category: {
       type: String,
     },
+    hourPerWeek: String,
     experience: {
       descritption: String,
       title: String,
     },
-    level: String,
     placeName: String,
     skills: [String],
-    specificCategory: String,
-    salary: {
-      type: Number,
-      min: 0,
-    },
     englishLevel: String,
-    hourPerWeek: String,
     document: String,
-    screeningQuestion: [String],
+    question: [String],
     deadline: Date,
+    cvRequired: {
+      type: Boolean,
+      default: false,
+    },
     description: {
       type: String,
       minLenght: 30,
       maxlength: 500,
-    },
-    cv: {
-      type: Boolean,
-      default: false,
     },
     user: {
       type: mongoose.Types.ObjectId,

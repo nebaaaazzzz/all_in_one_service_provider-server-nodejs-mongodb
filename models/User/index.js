@@ -4,11 +4,11 @@ const bcrypt = require("bcrypt");
 const hash = require("util").promisify(bcrypt.hash);
 const userSchema = new mongoose.Schema(
   {
-    firstname: {
+    firstName: {
       type: String,
       required: true,
     },
-    lastname: {
+    lastName: {
       type: String,
       required: true,
     },
@@ -25,12 +25,12 @@ const userSchema = new mongoose.Schema(
       validate: validator.isEmail,
       unique: true,
     },
-    profilepic: {
-      type: String,
-      default: "User_Icon",
+    profilePic: {
+      type: mongoose.Types.ObjectId,
+      default: "62d117b38690f1020ce194d7",
     },
     profilepics: {
-      type: [String],
+      type: [mongoose.Types.ObjectId],
     },
 
     description: {

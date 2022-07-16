@@ -7,6 +7,12 @@ route.get("/", async (req, res, next) => {
   const size = 5;
   const houses = await houseQuery.skip((page - 1) * size).limit(size);
   res.send(houses);
+  // const query = req.query;
+  // const houseQuery = House.find();
+  // const page = query.page > 1 ? query.page : 1;
+  // const size = 5;
+  // const houses = await houseQuery.skip((page - 1) * size).limit(size);
+  // res.send(houses);
   // .where({ price: { $gte: 21, $lte: 65 } })
   // .where({ placetype: "full" })
   // .where({ bedrooms: 3 })

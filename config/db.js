@@ -11,4 +11,5 @@ mongoose.connect(process.env.MONGODB_LOCAL_URL, (err) => {
 });
 
 const db = mongoose.connections[0].client.db("connect");
-module.exports = new mongodb.GridFSBucket(db, { bucketName: "uploads" });
+
+module.exports = (bucketName="uploads")=>new mongodb.GridFSBucket(db, { bucketName });
