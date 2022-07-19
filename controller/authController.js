@@ -73,35 +73,6 @@ const registerUser = catchAsyncError(async (req, res, next) => {
       } else {
         return next(new ErrorHandler("invalid phonenumber", 400));
       }
-    } else if (req.body.email) {
-      const randString = generateRandStr({
-        length: 6,
-        charset: "numeric",
-      });
-      require("./../../config/mail")(req.body.email, "code " + randString);
-      const doc = await User.create({
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        sex: req.body.sex,
-        randString,
-        email: req.body.email,
-        verified: true,
-        password: req.body.password,
-      });
-      res.send({
-        success: true,
-        data: {
-          doc,
-          token: jwt.sign(
-            {
-              isAdmin: doc.isAdmin,
-              sub: doc.id,
-              exp: Date.now() + 15 * 24 * 60 * 60 * 60,
-            },
-            process.env.SECRETE
-          ),
-        },
-      });
     }
   }
 });
@@ -151,30 +122,36 @@ const loginUser = catchAsyncError(async (req, res, next) => {
         return next(new ErrorHandler("password mismatch", 400));
       }
     }
-  } else if (req?.body?.email) {
-    const user = await User.findOne({ email: req.body.email });
-    if (user) {
-      const match = await bcrypt.compare(req?.body.password, user.password);
-      if (match) {
-        res.send({
-          success: true,
-          data: {
-            token: jwt.sign(
-              {
-                isAdmin: user.isAdmin,
-                sub: user.id,
-                exp: Date.now() + 15 * 24 * 60 * 60 * 60,
-              },
-              process.env.SECRETE
-            ),
-          },
-        });
-      } else {
-        res.send("password mismatch");
-      }
-    }
-  } else {
-    res.status(400).send("eroor");
+  }
+  //  else if (req?.body?.email) {
+  //   const user = await User.findOne({ email: req.body.email }).select(
+  //     "+password"
+  //   );
+  //   if (user) {
+  //     const match = await bcrypt.compare(req?.body.password, user.password);
+  //     if (match) {
+  //       res.send({
+  //         token: jwt.sign(
+  //           {
+  //             isAdmin: user.isAdmin,
+  //             sub: user.id,
+  //             exp: Date.now() + 15 * 24 * 60 * 60 * 60,
+  //           },
+  //           process.env.SECRETE
+  //         ),
+  //       });
+  //     } else {
+  //       //wrong password
+  //       return next(new ErrorHandler("Wrong Email or Password", 400));
+  //     }
+  //   } else {
+  //     return next(new ErrorHandler("email not found", 404));
+  //   }
+  // }
+  else {
+    return next(
+      new ErrorHandler("Email/phone number and password required", 400)
+    );
   }
 });
 module.exports = { registerUser, validateUserAccount, loginUser };

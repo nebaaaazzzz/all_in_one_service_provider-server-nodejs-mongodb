@@ -36,7 +36,7 @@ route.get("/posts", async (req, res) => {
   const pageSize = 5;
   const query = Job.find({ id: req.user.id });
   const jobs = await query
-    .sort({ createdAt: 1 })
+    .sort({ createdAt: -1 })
     .limit(pageSize)
     .skip(pageSize * (page - 1));
   res.send(jobs);

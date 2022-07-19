@@ -1,7 +1,8 @@
+const bcrypt = require("bcrypt");
+
 const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
-const mongodb = require("mongodb");
 const bucket = require("./config/db")();
 
 const ErrorHandler = require("./utils/ErrorHandler");
@@ -15,7 +16,6 @@ const lesseeRouter = require("./routes/lessee");
 const lesserRouter = require("./routes/lesser");
 const adminRouter = require("./routes/admin");
 const paymentRouter = require("./routes/payment");
-
 /* */
 
 /*connect database */
@@ -43,11 +43,6 @@ const isAdmin = (req, res, next) => {
     next(new ErrorHandler("not admin", 401));
   }
 };
-/*global error middleware */
-app.use((err, req, res, next) => {
-  console.log(err);
-  res.send(err.message);
-});
 
 /*middleware */
 app.use(express.json());
@@ -108,6 +103,12 @@ app.use("/lessee", lesseeRouter);
 app.use("/lesser", lesserRouter);
 app.use("/admin", isAdmin, adminRouter);
 app.use("/payment", paymentRouter);
+/*global error middleware */
+app.use((err, req, res, next) => {
+  res.status(err.statusCode).send({
+    err: err.message,
+  });
+});
 
 module.exports = {
   app,

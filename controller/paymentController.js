@@ -54,7 +54,7 @@ exports.IPNDestination = function (req, res) {
       res.json({ "IPN Status": ipnStatus });
     })
     .catch((err) => {
-      console.llog(err, "paymentController 45");
+      console.log(err, "paymentController 45");
       res.json({ Error: err });
     });
 };

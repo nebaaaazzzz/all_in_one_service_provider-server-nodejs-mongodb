@@ -6,7 +6,11 @@ route.get("/", async (req, res, next) => {
   const jobQuery = Job.find();
   const page = query.page > 1 ? query.page : 1;
   const size = 5;
-  const jobs = await jobQuery.skip((page - 1) * size).limit(size);
+  const jobs = await jobQuery
+    .where({ user: { $ne: req.user.id } })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * size)
+    .limit(size);
   res.send(jobs);
   // .where({ price: { $gte: 21, $lte: 65 } })
   // .where({ placetype: "full" })

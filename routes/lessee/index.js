@@ -5,7 +5,11 @@ route.get("/", async (req, res, next) => {
   const houseQuery = House.find();
   const page = query.page > 1 ? query.page : 1;
   const size = 5;
-  const houses = await houseQuery.skip((page - 1) * size).limit(size);
+  const houses = await houseQuery
+    .where({ user: { $ne: req.user.id } })
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * size)
+    .limit(size);
   res.send(houses);
   // const query = req.query;
   // const houseQuery = House.find();
@@ -24,5 +28,10 @@ route.get("/", async (req, res, next) => {
   /*features -pool hottube parking gym smoking-allowed heating tv*/
   /*who is comming -adults(13>) children(2-12) infant(<2) pets*/
   /*where - city */
+});
+route.get("/search", async (req, res, next) => {
+  const query = req.query;
+  const keyword = query.keyword;
+  const houseQuery = House.find();
 });
 module.exports = route;

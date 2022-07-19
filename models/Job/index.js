@@ -12,7 +12,7 @@ const jobSchema = new mongoose.Schema(
       from: Number,
       to: Number,
     },
-    quantity: Number,
+    // quantity: Number,
     gender: {
       type: String,
       enum: ["male", "female", "both"],

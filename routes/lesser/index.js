@@ -37,7 +37,7 @@ route.get("/posts", async (req, res) => {
   const pageSize = 5;
   const query = House.find({ id: req.user.id });
   const houses = await query
-    .sort({ createdAt: 1 })
+    .sort({ createdAt: -1 })
     .limit(pageSize)
     .skip(pageSize * (page - 1));
   res.send(houses);

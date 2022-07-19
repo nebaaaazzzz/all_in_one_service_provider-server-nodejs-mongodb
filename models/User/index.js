@@ -13,12 +13,10 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     phone: {
-      type: {
-        number: String,
-        country: String,
-      },
+      number: String,
       unique: true,
       select: false,
+      required: true,
     },
     email: {
       type: String,
@@ -29,9 +27,7 @@ const userSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       default: "62d117b38690f1020ce194d7",
     },
-    profilepics: {
-      type: [mongoose.Types.ObjectId],
-    },
+    profilepics: [mongoose.Types.ObjectId],
 
     description: {
       type: String,
@@ -52,9 +48,7 @@ const userSchema = new mongoose.Schema(
     city: {
       type: String,
     },
-    country: {
-      type: String,
-    },
+
     perhour: {
       type: Number,
     },
