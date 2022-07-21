@@ -1,157 +1,124 @@
 const promisify = require("util").promisify;
-const randomstring = require("randomstring");
-const generateRandStr = promisify(randomstring.generate);
 const validator = require("validator").default;
-const phonevalidate = require("libphonenumber-js");
+const { isValidPhoneNumber } = require("libphonenumber-js");
 const ErrorHandler = require("./../utils/ErrorHandler/");
 
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-const sendText = require("./../config/textmsg");
+// const sendText = require("./../config/textmsg");
+
 const catchAsyncError = require("../utils/catchAsyncError");
+
 const registerUser = catchAsyncError(async (req, res, next) => {
-  if (!validator.equals(req.body.password, req.body.confirmpassword)) {
+  if (!validator.equals(req.body.password, req.body.confirmPassword)) {
     return next(new ErrorHandler("password mismatch", 400));
   } else {
-    if (req.body.phno) {
-      const phoneNumber = phonevalidate.parsePhoneNumber(req.body.phno);
-      // {
-      //   country,
-      //   number,
-      //   nationalNumber,
-      //   countryCallingCode
-      // }
-      if (phoneNumber.isValid()) {
-        const user = User.findOneAndUpdate(
-          {
-            phone: phoneNumber,
-          },
-          {
-            password: req?.body?.password,
-            firstname: req?.body?.firstname,
-            randString,
-            lastname: req?.body?.lastname,
-            sex: req.body.sex,
-          }
-        );
-        if (user) {
-          const randString = generateRandStr({
-            length: 6,
-            charset: "numeric",
-          });
-          sendText(req.body.phno, "code " + randString);
-          return res.status(201).send({
-            success: true,
-            data: {
-              doc,
-            },
-          });
+    if (req.body.phoneNumber) {
+      if (isValidPhoneNumber(req.body.phoneNumber, "ET")) {
+        if (req.body.password.length < 6) {
+          return next(
+            new ErrorHandler("password length less than minumum", 400)
+          );
         }
-        const randString = generateRandStr({
-          length: 6,
-          charset: "numeric",
-        });
-        sendText(req.body.phno, "code " + randString);
-        await User.create({
-          firstname: req?.body?.firstname,
-          randString,
-          lastname: req?.body?.lastname,
-          sex: req.body.sex,
-          phone: {
-            number: phoneNumber?.number,
-            country: phoneNumber?.country,
-          },
-          password: req?.body?.password,
-        });
-        res.status(201).send({
-          success: true,
-          data: {
-            doc,
-          },
+        const user = await User.findOne({
+          phoneNumber: req.body.phoneNumber,
+        }).select("+verified");
+        if (user) {
+          if (user.verified) {
+            return next(new ErrorHandler("user already exists", 400));
+          }
+          let min = 100000;
+          let max = 900000;
+          let randString = Math.floor(Math.random() * (max - min + 1)) + min;
+
+          const doc = await user.updateOne({
+            firstName: req?.body?.firstName,
+            lastName: req?.body?.lastname,
+            password: req?.body?.password,
+            phoneNumber: req?.body?.phoneNumber,
+            gender: req?.body?.gender,
+            dateOfBirth: req?.body?.date,
+            randString,
+          });
+          // sendText(req.body.phoneNumber, "code " + randString);
+          return res.status(201).send(user);
+        }
+
+        try {
+          let min = 100000;
+          let max = 900000;
+          let randString = Math.floor(Math.random() * (max - min + 1)) + min;
+          const doc = await User.create({
+            firstName: req?.body?.firstName,
+            lastName: req?.body?.lastName,
+            password: req?.body?.password,
+            phoneNumber: req?.body?.phoneNumber,
+            gender: req?.body?.gender,
+            dateOfBirth: req?.body?.date,
+            randString,
+          });
+          sendText(req.body.phoneNumber, "code " + randString);
+          return res.status(201).send(doc);
+        } catch (err) {
+          throw err;
+        }
+
+        return res.status(201).send({
+          data: doc,
         });
       } else {
         return next(new ErrorHandler("invalid phonenumber", 400));
       }
+    } else {
+      return next(new ErrorHandler("some fields required", 400));
     }
   }
 });
 const validateUserAccount = catchAsyncError(async (req, res, next) => {
-  if (req.user.randString === req.body.randString) {
-    const doc = await User.findByIdAndUpdate(req.user.id, {
-      verified: true,
-      randString: undefined,
-    });
-    res.send({
-      success: true,
-      data: {
-        doc,
-        token: jwt.sign(
-          {
-            isAdmin: doc.isAdmin,
-            sub: user.id,
-            exp: Date.now() + 15 * 24 * 60 * 60 * 60,
-          },
-          process.env.SECRETE
-        ),
-      },
-    });
+  const user = await User.findById(req.body.id);
+  if (user) {
+    if (user.randString === req.body.randString) {
+      await user.updateOne({
+        verified: true,
+        randString: null,
+      });
+      return res.send({
+        success: true,
+      });
+    }
+    return next(new ErrorHandler("invalid conformation number", 400));
+  } else {
+    return next(new ErrorHandler("user not found", 400));
   }
-  return next(new ErrorHandler("invalid conformation number", 400));
 });
 const loginUser = catchAsyncError(async (req, res, next) => {
-  if (req?.body?.phno) {
-    const user = await User.findOne({ phone: { number: req.body.phno } });
+  if (req?.body?.phoneNumber) {
+    const user = await User.findOne({
+      phoneNumber: req.body.phoneNumber,
+    }).select("+password");
     if (user) {
-      const match = await bcrypt.compare(req?.body.password, user.password);
+      const match = await bcrypt.compare(req?.body?.password, user.password);
       if (match) {
         res.send({
-          success: true,
-          data: {
-            token: jwt.sign(
-              {
-                isAdmin: doc.isAdmin,
-                sub: user.id,
-                exp: Date.now() + 15 * 24 * 60 * 60 * 60,
-              },
-              process.env.SECRETE
-            ),
-          },
+          token: jwt.sign(
+            {
+              isAdmin: user.isAdmin,
+              sub: user.id,
+              exp: Date.now() + 15 * 24 * 60 * 60 * 60,
+            },
+            process.env.SECRETE
+          ),
         });
       } else {
-        return next(new ErrorHandler("password mismatch", 400));
+        return next(new ErrorHandler("wrong phone or password", 400));
       }
     }
-  }
-  //  else if (req?.body?.email) {
-  //   const user = await User.findOne({ email: req.body.email }).select(
-  //     "+password"
-  //   );
-  //   if (user) {
-  //     const match = await bcrypt.compare(req?.body.password, user.password);
-  //     if (match) {
-  //       res.send({
-  //         token: jwt.sign(
-  //           {
-  //             isAdmin: user.isAdmin,
-  //             sub: user.id,
-  //             exp: Date.now() + 15 * 24 * 60 * 60 * 60,
-  //           },
-  //           process.env.SECRETE
-  //         ),
-  //       });
-  //     } else {
-  //       //wrong password
-  //       return next(new ErrorHandler("Wrong Email or Password", 400));
-  //     }
-  //   } else {
-  //     return next(new ErrorHandler("email not found", 404));
-  //   }
-  // }
-  else {
+  } else {
     return next(
       new ErrorHandler("Email/phone number and password required", 400)
     );
   }
 });
+
 module.exports = { registerUser, validateUserAccount, loginUser };

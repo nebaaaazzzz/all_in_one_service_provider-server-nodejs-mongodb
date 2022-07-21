@@ -27,9 +27,8 @@ const houseSchema = new mongoose.Schema(
     },
     placeName: { type: String, required: true },
     guestSize: {
-      guests: { type: Number, default: 0 },
       beds: { type: Number, default: 0 },
-      bedrooms: { type: Number, default: 0 },
+      kitchens: { type: Number, default: 0 },
       bathrooms: { type: Number, default: 0 },
     },
     saftyItems: {
@@ -58,6 +57,7 @@ const houseSchema = new mongoose.Schema(
       type: [String],
       required: true,
     },
+    applicants: [],
     price: {
       type: Number,
       required: true,

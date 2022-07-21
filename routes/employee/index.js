@@ -1,38 +1,81 @@
 const route = require("express").Router();
 const Job = require("../../models/Job");
-
+const mongoose = require("mongoose");
 route.get("/", async (req, res, next) => {
   const query = req.query;
   const jobQuery = Job.find();
   const page = query.page > 1 ? query.page : 1;
   const size = 5;
   const jobs = await jobQuery
-    .where({ user: { $ne: req.user.id } })
+    .where({ applicants: { $nin: [req.user.id] } }) //not to send applied houses
+    .where({ user: { $ne: mongoose.Types.ObjectId(req.user.id) } }) // not to send
     .sort({ createdAt: -1 })
     .skip((page - 1) * size)
     .limit(size);
   res.send(jobs);
-  // .where({ price: { $gte: 21, $lte: 65 } })
-  // .where({ placetype: "full" })
-  // .where({ bedrooms: 3 })
-  // .where({ bathroom: 3 })
-  // .where({ propertype: "hotel" }) /*house ,apartment ,guesthouse ,hotel */
-  // .where({
-  //   amenalities: "wifi kitchen washer dryer air-conditioning heating tv",
-  // }); /*essential -wifi kitchen washer dryer air-conditioning heating tv*/
-  /*features -pool hottube parking gym smoking-allowed heating tv*/
-  /*who is comming -adults(13>) children(2-12) infant(<2) pets*/
-  /*where - city */
 });
 route.get("/job/:id", async (req, res) => {
   const job = await Job.findById(req.params.id);
   if (!job) {
     return next(new ErrorHandler("house not found", 404));
   }
+  if (job.applicants) {
+    const bool = job.applicants.includes(req.user.id);
+    if (bool) {
+      const result = job.toObject();
+      result.applied = true;
+      return res.send({
+        success: true,
+        data: result,
+      });
+    }
+  }
   res.send({
     success: true,
     data: job,
   });
 });
-route.post("/apply-job", (req, res) => {});
+
+route.post("/apply/:id", async (req, res, next) => {
+  const job = await Job.findById(req.params.id);
+  if (job) {
+    const applicants = job.applicants;
+    if (!applicants) {
+      await job.updateOne({
+        $set: { applicants: [] },
+        $addToSet: { applicants: req.user.id },
+      });
+    } else {
+      const bool = applicants.includes(req.user.id);
+      if (bool) {
+        await job.updateOne({
+          $pull: { applicants: req.user.id },
+        });
+      } else {
+        await job.updateOne({
+          $addToSet: { applicants: req.user.id },
+        });
+      }
+    }
+    return res.send({ success: true });
+  }
+  return next(new ErrorHandler("house not found", 404));
+});
+
+route.get("/applied", async (req, res) => {
+  const query = req.query;
+  const jobQuery = Job.find();
+  const page = query.page > 1 ? query.page : 1;
+  const size = 5;
+  const jobs = await jobQuery
+    .where({
+      applicants: { $elemMatch: { $eq: req.user.id } },
+    }) //not to send applied houses
+    .sort({ createdAt: -1 })
+    .skip((page - 1) * size)
+    .limit(size);
+
+  res.send(jobs);
+});
+
 module.exports = route;

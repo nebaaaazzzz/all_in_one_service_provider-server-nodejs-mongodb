@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const validator = require("validator").default;
 const bcrypt = require("bcrypt");
+const ErrorHandler = require("../../utils/ErrorHandler");
 const hash = require("util").promisify(bcrypt.hash);
 const userSchema = new mongoose.Schema(
   {
@@ -12,17 +13,24 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    phone: {
-      number: String,
+    gender: {
+      lowercase: true,
+      type: String,
+      required: true,
+      enum: ["male", "female"],
+    },
+    dateOfBirth: Date,
+    phoneNumber: {
+      type: String,
       unique: true,
       select: false,
       required: true,
     },
-    email: {
-      type: String,
-      validate: validator.isEmail,
-      unique: true,
-    },
+    // email: {
+    //   type: String,
+    //   validate: validator.isEmail,
+    //   unique: true,
+    // },
     profilePic: {
       type: mongoose.Types.ObjectId,
       default: "62d117b38690f1020ce194d7",
@@ -36,11 +44,6 @@ const userSchema = new mongoose.Schema(
     },
     skills: { type: [String] },
 
-    sex: {
-      lowercase: true,
-      type: String,
-      enum: ["male", "female", "other"],
-    },
     password: {
       select: false,
       type: String,
@@ -81,6 +84,7 @@ const userSchema = new mongoose.Schema(
 
       default: false,
     },
+    applicants: [mongoose.Types.ObjectId],
   },
   {
     timestamps: true,
@@ -92,12 +96,18 @@ userSchema.pre("save", async function (next) {
 });
 userSchema.pre(
   ["updateOne", "findOneAndUpdate", "findByIdAndUpdate"],
-  function (next) {
-    console.log(this.getFilter());
+  async function (next) {
+    const query = this;
+    const update = this.getUpdate();
+    if (!update.password) {
+      return next();
+    }
+    update.password = await hash(update.password, 10);
     next();
   }
 );
 userSchema.pre(["update,updateMany"], function (next) {
   next();
 });
-module.exports = mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+module.exports = User;

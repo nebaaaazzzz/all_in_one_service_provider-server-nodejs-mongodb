@@ -32,6 +32,7 @@ const jobSchema = new mongoose.Schema(
       descritption: String,
       title: String,
     },
+    applicants: [],
     placeName: String,
     skills: [String],
     englishLevel: String,

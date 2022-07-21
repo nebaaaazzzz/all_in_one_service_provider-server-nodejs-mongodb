@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const route = require("express").Router();
 const Job = require("./../../models/Job");
 const upload = require("../../config/fileHandler")();
@@ -30,16 +31,34 @@ route.get("/job/:id", async (req, res, next) => {
     data: job,
   });
 });
+route.post("/edit-post/:id", async (req, res) => {
+  const job = await Job.findById(req.params.id);
+  if (job) {
+    await job.updateOne(req.body);
+    return res.send();
+  }
+  return next(new ErrorHandler("house not found", 404));
+});
 route.get("/posts", async (req, res) => {
   let page = req?.query?.page;
   page = page > 1 ? page : 1;
   const pageSize = 5;
-  const query = Job.find({ id: req.user.id });
+  const query = Job.find();
   const jobs = await query
+    .where({ user: { $eq: new mongoose.Types.ObjectId(req.user.id) } })
     .sort({ createdAt: -1 })
     .limit(pageSize)
     .skip(pageSize * (page - 1));
   res.send(jobs);
+});
+route.get("/applicants/:id", async (req, res) => {
+  const house = await House.findById(req.body.id);
+  if (house) {
+    return res.send({
+      data: house.applicants || [],
+    });
+  }
+  next(new ErrorHandler("house not found", 404));
 });
 
 module.exports = route;

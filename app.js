@@ -58,6 +58,8 @@ X-XSS-Potection
 X-Content-Type-Options
 Content-Security-Policy
 */
+/*auth router */
+app.use("/auth", authRouter);
 
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
@@ -92,7 +94,6 @@ app.use(passport.initialize());
 /*route */
 require("./config/passport");
 
-app.use("/auth", authRouter);
 app.use("/", passport.authenticate("jwt", { session: false }), isSuspended);
 app.use(isVerified);
 app.use("/", commonRouter);
@@ -105,7 +106,8 @@ app.use("/admin", isAdmin, adminRouter);
 app.use("/payment", paymentRouter);
 /*global error middleware */
 app.use((err, req, res, next) => {
-  res.status(err.statusCode).send({
+  const statusCode = err.statusCode || 400;
+  res.status(statusCode).send({
     err: err.message,
   });
 });
