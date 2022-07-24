@@ -47,7 +47,7 @@ route.get("/profile-pic/:id", async (req, res, next) => {
       res.set("Content-Length", doc.length);
       bucket.openDownloadStream(doc._id).pipe(res);
     });
-    return;
+    console.log("request......");
   } else {
     next(new ErrorHandler("notfound image", 404));
   }

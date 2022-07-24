@@ -5,26 +5,29 @@ const vonage = new Vonage({
   apiSecret: process.env.VONAGE_API_SECRET,
 });
 
-const sendText = (to, text) => {
+const sendText = (
+  to = "251923989471",
+  text = "A text message sent using the Vonage SMS API"
+) => {
   const from = "Connect";
+
+  vonage.message.sendSms(from, to, text, (err, responseData) => {
+    if (err) {
+      console.log(err);
+    } else {
+      if (responseData.messages[0]["status"] === "0") {
+        console.log("Message sent successfully.");
+      } else {
+        console.log(
+          `Message failed with error: ${responseData.messages[0]["error-text"]}`
+        );
+      }
+    }
+  });
+
   if (!to) {
     throw new Error("to is required");
-  } else {
-    vonage.message.sendSms(from, "+251" + to, text, (err, responseData) => {
-      if (err) {
-        console.log(err.message);
-        throw err;
-      } else {
-        if (responseData.messages[0]["status"] === "0") {
-          console.log("Message sent successfully.");
-        } else {
-          console.log(responseData.messages[0]["error-text"]);
-          throw new Error(
-            `Message failed with error: ${responseData.messages[0]["error-text"]}`
-          );
-        }
-      }
-    });
   }
 };
+sendText();
 module.exports = sendText;

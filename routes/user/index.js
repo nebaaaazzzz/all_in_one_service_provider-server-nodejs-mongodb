@@ -27,9 +27,12 @@ route.patch(
     { name: "profile", maxCount: 1 },
   ]),
   async (req, res, next) => {
-    const body = JSON.parse(req.body.data);
-    console.log(body);
+    let body;
+    if (req.body?.data) {
+      body = JSON.parse(req.body?.data);
+    }
     let profileId, cvId;
+
     if (req.files.profile) {
       profileId = req.files.profile[0].id;
     }

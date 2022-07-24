@@ -7,7 +7,7 @@ route.post("/posthouse", upload.array("houseImage", 100), async (req, res) => {
   const obj = JSON.parse(req.body.body);
   obj.houseImages = req.files.map((file) => file.id);
   obj.price = Number(obj.price);
-  obj.location = { type: "Point", coordinates: obj.center };
+  obj.location = { coordinates: obj.center };
   delete obj.center;
   await House.create({ ...obj, user: req.user.id });
   res.status(201).send({
@@ -61,6 +61,52 @@ route.get("/applicants/:id", async (req, res, next) => {
     return res.send([]);
   }
   next(new ErrorHandler("house not found", 404));
+});
+route.get("/approve/:houseId/:userId", async (req, res, next) => {
+  const user = await User.findById(req.params.userId);
+  const house = await House.findById(req.params.houseId);
+  if (user && house) {
+    if (house.applicants.length) {
+      const applicants = house.applicants;
+      const bool = applicants.includes(req.params.userId);
+      if (bool) {
+        await house
+          .UpateOne({
+            $addToSet: { approved: req.params.userId },
+          })
+          .updateOne({
+            $pull: { votes: { $eq: req.params.userId } },
+          });
+      } else {
+        return next("user not applied", 404);
+      }
+    }
+    return next(("no one applied", 404));
+  }
+  next(new ErrorHandler("user or house not found", 404));
+});
+route.get("/reject/:houseId/:userId", async (req, res, next) => {
+  const user = await User.findById(req.params.userId);
+  const house = await House.findById(req.params.houseId);
+  if (user && house) {
+    if (house.applicants.length) {
+      const applicants = house.applicants;
+      const bool = applicants.includes(req.params.userId);
+      if (bool) {
+        await house
+          .UpateOne({
+            $addToSet: { rejected: req.params.userId },
+          })
+          .updateOne({
+            $pull: { votes: { $eq: req.params.userId } },
+          });
+      } else {
+        return next("user not applied", 404);
+      }
+    }
+    return next(("no one applied", 404));
+  }
+  next(new ErrorHandler("user or house not found", 404));
 });
 
 module.exports = route;

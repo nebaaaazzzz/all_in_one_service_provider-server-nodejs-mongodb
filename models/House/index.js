@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const pointSchema = require("./../schemas/locationschema");
 
 const houseSchema = new mongoose.Schema(
   {
@@ -17,10 +16,19 @@ const houseSchema = new mongoose.Schema(
       ref: "User",
     },
     location: {
-      type: pointSchema,
-      required: true,
+      type: {
+        type: String,
+        default: "Point",
+        enum: ["Point"],
+        required: true,
+      },
+      coordinates: {
+        type: [Number],
+        required: true,
+      },
     },
 
+    region: String,
     placeKind: {
       type: String,
       required: true,
@@ -58,6 +66,8 @@ const houseSchema = new mongoose.Schema(
       required: true,
     },
     applicants: [],
+    approved: [],
+    rejected: [],
     price: {
       type: Number,
       required: true,
@@ -67,5 +77,6 @@ const houseSchema = new mongoose.Schema(
 
   { timestamps: true }
 );
+houseSchema.index({ location: "2dsphere" });
 
 module.exports = mongoose.model("House", houseSchema);

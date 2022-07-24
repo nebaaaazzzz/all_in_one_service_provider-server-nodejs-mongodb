@@ -1,11 +1,11 @@
 const bcrypt = require("bcrypt");
-
+// require("./config/textmsg");
 const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
 const cors = require("cors");
 app.use(cors());
-
+// const morgan = require('morgan')
 const bucket = require("./config/db");
 
 const ErrorHandler = require("./utils/ErrorHandler");

@@ -30,6 +30,18 @@ route.get("/job/:id", async (req, res) => {
       });
     }
   }
+  if (job.approved) {
+    const bool = job.approved.includes(req.user.id);
+    if (bool) {
+      const result = job.toObject();
+      result.approved = true;
+      result.user = req.user;
+      return res.send({
+        success: true,
+        data: result,
+      });
+    }
+  }
   res.send({
     success: true,
     data: job,
@@ -76,6 +88,37 @@ route.get("/applied", async (req, res) => {
     .limit(size);
 
   res.send(jobs);
+});
+
+route.get("/approved", async (req, res) => {
+  const query = req.query;
+  const jobQuery = Job.find();
+  const page = query.page > 1 ? query.page : 1;
+  const size = 5;
+  const houses = await jobQuery
+    .where({
+      approved: { $elemMatch: { $eq: req.user.id } },
+    }) //not to send applied houses
+    .sort({ updatedAt: -1 })
+    .skip((page - 1) * size)
+    .limit(size);
+
+  res.send(houses);
+});
+route.get("/rejected", async (req, res) => {
+  const query = req.query;
+  const jobQuery = Job.find();
+  const page = query.page > 1 ? query.page : 1;
+  const size = 5;
+  const houses = await jobQuery
+    .where({
+      approved: { $elemMatch: { $eq: req.user.id } },
+    }) //not to send applied houses
+    .sort({ updatedAt: -1 })
+    .skip((page - 1) * size)
+    .limit(size);
+
+  res.send(houses);
 });
 
 module.exports = route;

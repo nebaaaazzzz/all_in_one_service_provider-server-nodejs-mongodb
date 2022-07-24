@@ -70,4 +70,51 @@ route.get("/applicants/:id", async (req, res, next) => {
   }
   next(new ErrorHandler("job not found", 404));
 });
+route.get("/approve/:jobId/:userId", async (req, res, next) => {
+  const job = await User.findById(req.params.jobId);
+  const house = await Job.findById(req.params.houseId);
+  if (job && job) {
+    if (house.applicants.length) {
+      const applicants = house.applicants;
+      const bool = applicants.includes(req.params.userId);
+      if (bool) {
+        await job
+          .UpateOne({
+            $addToSet: { approved: req.params.userId },
+          })
+          .updateOne({
+            $pull: { votes: { $eq: req.params.userId } },
+          });
+      } else {
+        return next("user not applied", 404);
+      }
+    }
+    return next(("no one applied", 404));
+  }
+  next(new ErrorHandler("user or house not found", 404));
+});
+route.get("/reject/:jobId/:userId", async (req, res, next) => {
+  const job = await User.findById(req.params.jobId);
+  const house = await Job.findById(req.params.houseId);
+  if (job && job) {
+    if (house.applicants.length) {
+      const applicants = house.applicants;
+      const bool = applicants.includes(req.params.userId);
+      if (bool) {
+        await job
+          .UpateOne({
+            $addToSet: { rejected: req.params.userId },
+          })
+          .house.updateOne({
+            $pull: { votes: { $eq: req.params.userId } },
+          });
+      } else {
+        return next("user not applied", 404);
+      }
+    }
+    return next(("no one applied", 404));
+  }
+  next(new ErrorHandler("user or house not found", 404));
+});
+
 module.exports = route;
