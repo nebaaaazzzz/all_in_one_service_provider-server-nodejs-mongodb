@@ -3,7 +3,10 @@ const bcrypt = require("bcrypt");
 const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
-const bucket = require("./config/db")();
+const cors = require("cors");
+app.use(cors());
+
+const bucket = require("./config/db");
 
 const ErrorHandler = require("./utils/ErrorHandler");
 //routes
@@ -27,7 +30,6 @@ const isSuspended = (req, res, next) => {
   }
   next(new ErrorHandler("suspended Accout", 401));
 };
-const upload = require("./config/fileHandler");
 
 const isVerified = (req, res, next) => {
   if (req.user.verified) {
@@ -89,14 +91,18 @@ app.get("/house/image/:id", async (req, res, next) => {
 });
 /*passport */
 const passport = require("passport");
+
 app.use(passport.initialize());
 
 /*route */
 require("./config/passport");
 
 app.use("/", passport.authenticate("jwt", { session: false }), isSuspended);
+
 app.use(isVerified);
+
 app.use("/", commonRouter);
+
 app.use("/user", userRouter);
 app.use("/employer", employerRouter);
 app.use("/employee", employeeRouter);
@@ -108,7 +114,7 @@ app.use("/payment", paymentRouter);
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 400;
   res.status(statusCode).send({
-    err: err.message,
+    message: err.message,
   });
 });
 

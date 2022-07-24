@@ -20,57 +20,54 @@ const userSchema = new mongoose.Schema(
       enum: ["male", "female"],
     },
     dateOfBirth: Date,
+
+    email: {
+      type: String,
+      validate: validator.isEmail,
+      unique: true,
+    },
     phoneNumber: {
       type: String,
       unique: true,
       select: false,
       required: true,
     },
-    // email: {
-    //   type: String,
-    //   validate: validator.isEmail,
-    //   unique: true,
-    // },
-    profilePic: {
-      type: mongoose.Types.ObjectId,
-      default: "62d117b38690f1020ce194d7",
-    },
-    profilepics: [mongoose.Types.ObjectId],
-
     description: {
       type: String,
       minlength: 50,
       maxlength: 500,
     },
-    skills: { type: [String] },
-
+    skills: [String],
+    profilePic: {
+      type: mongoose.Types.ObjectId,
+      default: "62d117b38690f1020ce194d7",
+    },
+    profilePics: [mongoose.Types.ObjectId],
+    cv: mongoose.Types.ObjectId,
+    cvs: [mongoose.Types.ObjectId],
     password: {
       select: false,
       type: String,
     },
-    city: {
-      type: String,
-    },
-
+    city: String,
+    region: String,
     perhour: {
       type: Number,
     },
-    education: {
-      type: [
-        {
-          where: String,
-          fron: Number,
-          to: Number,
-        },
-      ],
-    },
-    language: {
-      which: String,
-      level: {
-        type: String,
-        enum: ["conversational", "fluent"],
+    education: [
+      {
+        institution: String,
+        start: Date,
+        major: String,
+        to: Date,
       },
-    },
+    ],
+    languages: [
+      {
+        language: String,
+        level: String,
+      },
+    ],
     randString: String,
     isAdmin: {
       type: Boolean,
@@ -84,7 +81,6 @@ const userSchema = new mongoose.Schema(
 
       default: false,
     },
-    applicants: [mongoose.Types.ObjectId],
   },
   {
     timestamps: true,

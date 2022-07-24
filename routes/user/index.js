@@ -22,24 +22,52 @@ route.post(
 );
 route.patch(
   "/update-profile",
-  catchAsyncError(async (req, res) => {
-    const doc = await User.findByIdAndUpdate(req.user.id, {
-      ...req.body,
-    });
-    /*
-    firstname
-    lastname
-    password
-    description`
-    city
-    country
-    education
-    language
-    phone
-    sex
-    skills
-*/
-    res.send("success");
-  })
+  upload.fields([
+    { name: "cv", maxCount: 1 },
+    { name: "profile", maxCount: 1 },
+  ]),
+  async (req, res, next) => {
+    const body = JSON.parse(req.body.data);
+    console.log(body);
+    let profileId, cvId;
+    if (req.files.profile) {
+      profileId = req.files.profile[0].id;
+    }
+    if (req.files.cv) {
+      cvId = req.files.cv[0].id;
+    }
+    const user = await User.findById(req.user.id);
+    if (user) {
+      if (profileId) {
+        await user.updateOne({
+          $addToSet: { profilePics: user.profile },
+          profilePic: profileId,
+          ...body,
+        });
+      } else if (cvId) {
+        await user.updateOne({
+          ...(user.cv && { $addToSet: { cvs: user.cv } }),
+          $addToSet: { cvs: user.cv },
+          cv: cvId,
+          ...body,
+        });
+      } else {
+        await user.updateOne({
+          $addToSet: { profilePics: user.profile },
+          profilePic: profileId,
+          ...body,
+        });
+      }
+      return res.send({ success: true });
+    }
+    next(new ErrorHandler("user not found", 404));
+  }
 );
+route.patch("/change-password", async (req, res) => {
+  const doc = await User.findByIdAndUpdate(req.user.id, {
+    ...req.body,
+  });
+  res.send("success");
+});
+route.patch("/change-phone", async (req, res) => {});
 module.exports = route;

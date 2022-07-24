@@ -1,6 +1,7 @@
-const upload = require("../../config/fileHandler")();
+const upload = require("../../config/fileHandler");
 const route = require("express").Router();
 const House = require("./../../models/House");
+const User = require("./../../models/User");
 const ErrorHandler = require("../../utils/ErrorHandler");
 route.post("/posthouse", upload.array("houseImage", 100), async (req, res) => {
   const obj = JSON.parse(req.body.body);
@@ -43,12 +44,21 @@ route.get("/posts", async (req, res) => {
     .skip(pageSize * (page - 1));
   res.send(houses);
 });
-route.get("/applicants/:id", async (req, res) => {
-  const house = await House.findById(req.body.id);
+route.get("/applicants/:id", async (req, res, next) => {
+  const house = await House.findById(req.params.id);
   if (house) {
-    return res.send({
-      data: house.applicants || [],
-    });
+    if (house.applicants) {
+      let page = req?.query?.page;
+      page = page > 1 ? page : 1;
+      const pageSize = 5;
+      const skip = pageSize * (page - 1);
+      const limit = skip + pageSize;
+      const applicants = house.applicants.slice(skip, limit);
+      const docs = await User.find({ _id: { $in: applicants } });
+      return res.send(docs);
+    }
+
+    return res.send([]);
   }
   next(new ErrorHandler("house not found", 404));
 });

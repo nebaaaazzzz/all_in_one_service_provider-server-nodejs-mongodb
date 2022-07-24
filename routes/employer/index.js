@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 const route = require("express").Router();
 const Job = require("./../../models/Job");
-const upload = require("../../config/fileHandler")();
-const bucket = require("../../config/db")();
-
+const upload = require("../../config/fileHandler");
+const bucket = require("../../config/db");
+const User = require("../../models/User");
 route.post("/postjob", upload.single("document"), async (req, res) => {
   const obj = JSON.parse(req.body.body);
   obj.document = req?.file?.id;
@@ -24,7 +24,7 @@ route.post("/postjob", upload.single("document"), async (req, res) => {
 route.get("/job/:id", async (req, res, next) => {
   const job = await Job.findById(req.params.id);
   if (!job) {
-    return next(new ErrorHandler("house not found", 404));
+    return next(new ErrorHandler("job not found", 404));
   }
   res.send({
     success: true,
@@ -51,14 +51,23 @@ route.get("/posts", async (req, res) => {
     .skip(pageSize * (page - 1));
   res.send(jobs);
 });
-route.get("/applicants/:id", async (req, res) => {
-  const house = await House.findById(req.body.id);
-  if (house) {
-    return res.send({
-      data: house.applicants || [],
-    });
-  }
-  next(new ErrorHandler("house not found", 404));
-});
 
+route.get("/applicants/:id", async (req, res, next) => {
+  const job = await Job.findById(req.params.id);
+  if (job) {
+    if (job.applicants) {
+      let page = req?.query?.page;
+      page = page > 1 ? page : 1;
+      const pageSize = 5;
+      const skip = pageSize * (page - 1);
+      const limit = skip + pageSize;
+      const applicants = job.applicants.slice(skip, limit);
+      const docs = await User.find({ _id: { $in: applicants } });
+      return res.send(docs);
+    }
+
+    return res.send([]);
+  }
+  next(new ErrorHandler("job not found", 404));
+});
 module.exports = route;
