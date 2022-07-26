@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const express = require("express");
 const app = express();
 const cors = require("cors");
+
 app.use(cors());
 // const morgan = require('morgan')
 const bucket = require("./config/db");
@@ -90,6 +91,8 @@ app.get("/house/image/:id", async (req, res, next) => {
   next(new ErrorHandler("notfound image", 404));
 });
 /*passport */
+app.use("/payment", paymentRouter);
+
 const passport = require("passport");
 
 app.use(passport.initialize());
@@ -109,7 +112,6 @@ app.use("/employee", employeeRouter);
 app.use("/lessee", lesseeRouter);
 app.use("/lesser", lesserRouter);
 app.use("/admin", isAdmin, adminRouter);
-app.use("/payment", paymentRouter);
 /*global error middleware */
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 400;

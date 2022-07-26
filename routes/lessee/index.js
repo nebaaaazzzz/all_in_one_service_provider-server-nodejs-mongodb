@@ -1,12 +1,52 @@
 const route = require("express").Router();
 const House = require("../../models/House");
+const User = require("./../../models/User");
 const mongoose = require("mongoose");
 const ErrorHandler = require("../../utils/ErrorHandler");
 route.get("/", async (req, res, next) => {
   const query = req.query;
-  const houseQuery = House.find();
+  let houseQuery = House.find();
   const page = query.page > 1 ? query.page : 1;
   const size = 5;
+  if (query.nearby) {
+    houseQuery = houseQuery.where({
+      location: {
+        $near: {
+          $geometry: {
+            type: "Point",
+            coordinates: [1, 2],
+          },
+        },
+      },
+    });
+  }
+  if (query.region) {
+    const region = query.region;
+    houseQuery = houseQuery.where({
+      region: { $eq: region },
+    });
+  }
+  if (query.search) {
+    const keyword = query.search;
+    const option = "im";
+
+    houseQuery = houseQuery.where({
+      $or: [
+        { placeDescription: { $regex: keyword, $options: option } },
+        { region: { $regex: keyword, $options: option } },
+        { placeKind: { $regex: keyword, $options: option } },
+        { placeName: { $regex: keyword, $options: option } },
+        { propertyType: { $regex: keyword, $options: option } },
+        { detailDescription: { $regex: keyword, $options: option } },
+      ],
+    });
+  }
+  if (query.category) {
+    const category = query.category;
+    houseQuery = houseQuery.where({
+      category: { $eq: category },
+    });
+  }
   const houses = await houseQuery
     .where({ applicants: { $nin: [req.user.id] } }) //not to send applied houses
     .where({ approved: { $nin: [req.user.id] } }) //not to send approved houses
@@ -15,44 +55,10 @@ route.get("/", async (req, res, next) => {
     .sort({ createdAt: -1 })
     .skip((page - 1) * size)
     .limit(size);
+
   res.send(houses);
 });
-route.get("/near", async (req, res) => {
-  const docs = await House.find({
-    location: {
-      $near: {
-        $geometry: {
-          type: "Point",
-          coordinates: [1, 2],
-        },
-      },
-    },
-  });
-  res.send(docs);
-});
-route.get("/near", async (req, res) => {
-  const keyword = "1";
-  re = new RegExp(`\\b${keyword}\\b`, "gi");
-  const docs = await House.find({
-    $or: [
-      { placeDescription: re },
-      { region: re },
-      { placeKind: re },
-      { placeName: re },
-      { propertyType: re },
-      { detailDescription: re },
-    ],
-  }).sort({ createdAt: -1 });
-  res.send(docs);
-});
-route.get("/region", async (req, res) => {
-  const region = "1";
-  re = new RegExp(`\\b${keyword}\\b`, "gi");
-  const docs = await House.find({
-    region: { $eq: region },
-  }).sort({ createdAt: -1 });
-  res.send(docs);
-});
+
 route.post("/apply/:id", async (req, res, next) => {
   const house = await House.findById(req.params.id);
   if (house) {
@@ -62,15 +68,24 @@ route.post("/apply/:id", async (req, res, next) => {
         $set: { applicants: [] },
         $addToSet: { applicants: req.user.id },
       });
+      await User.findByIdAndUpdate({
+        left: req.user?.left - 1,
+      });
     } else {
       const bool = applicants.includes(req.user.id);
       if (bool) {
         await house.updateOne({
           $pull: { applicants: req.user.id },
         });
+        await User.findByIdAndUpdate({
+          left: req.user?.left + 1,
+        });
       } else {
         await house.updateOne({
           $addToSet: { applicants: req.user.id },
+        });
+        await User.findByIdAndUpdate({
+          left: req.user?.left - 1,
         });
       }
     }

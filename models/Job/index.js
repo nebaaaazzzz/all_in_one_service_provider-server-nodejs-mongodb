@@ -26,7 +26,6 @@ const jobSchema = new mongoose.Schema(
     category: {
       type: String,
     },
-    hourPerWeek: String,
     experience: {
       descritption: String,
       title: String,
@@ -40,6 +39,7 @@ const jobSchema = new mongoose.Schema(
     document: String,
     question: [String],
     deadline: Date,
+    deadtime: Boolean,
     cvRequired: {
       type: Boolean,
       default: false,

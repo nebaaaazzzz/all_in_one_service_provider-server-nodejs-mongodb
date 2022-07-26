@@ -6,7 +6,7 @@ const mongoose = require("mongoose");
 const ErrorHandler = require("../../utils/ErrorHandler");
 // 62d04d20cec61b8faed036d0
 route.get("/me", async (req, res) => {
-  const user = await User.findById(req.user.id);
+  const user = await User.findById(req.user.id).select("+phoneNumber");
   res.send(user);
 });
 route.post("/profile-pic", upload.single("profile"), async (req, res) => {

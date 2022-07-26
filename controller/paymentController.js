@@ -1,17 +1,19 @@
 const ypco = require("yenepaysdk");
-const ngrokuri = "https://b9e5-213-55-102-49.in.ngrok.io";
-const sellerCode = process.env.SELLRCODE,
+const ngrokuri = "https://93d4-213-55-102-49.in.ngrok.io";
+const User = require("./../models/User");
+const sellerCode = process.env.YENEPAY_SELLRCODE,
   successUrlReturn = `${ngrokuri}/payment/SuccessReturnUrl`, //"YOUR_SUCCESS_URL",
-  ipnUrlReturn = `${ngrokuri}/payment/IPNDestination`, //"YOUR_IPN_URL",
-  cancelUrlReturn = `${ngrokuri}/payment/CancelUlr`, //"YOUR_CANCEL_URL",
   failureUrlReturn = `${ngrokuri}/payment/FailureUrl`, //"YOUR_FAILURE_URL",
-  pdtToken = "suMVdLnbeLyz11",
+  cancelUrlReturn = `${ngrokuri}/payment/CancelUlr`, //"YOUR_CANCEL_URL",
+  ipnUrlReturn = `${ngrokuri}/payment/IPNDestination`, //"YOUR_IPN_URL",
+  pdtToken = process.env.YENEPAY_PDTKEY,
   useSandbox = true,
   currency = "ETB";
 
 exports.CheckoutExpress = function (req, res) {
-  const merchantOrderId = "12-34"; //"YOUR_UNIQUE_ID_FOR_THIS_ORDER";  //can also be set null
-  const expiresAfter = 2880; //"NUMBER_OF_MINUTES_BEFORE_THE_ORDER_EXPIRES"; //setting null means it never expires
+  const merchantOrderId = req.orderId; //"YOUR_UNIQUE_ID_FOR_THIS_ORDER";  //can also be set null
+  const expiresAfter = 30; //"NUMBER_OF_MINUTES_BEFORE_THE_ORDER_EXPIRES"; //setting null means it never expires
+  console.log(req.orderId);
   const checkoutOptions = ypco.checkoutOptions(
     sellerCode,
     merchantOrderId,
@@ -44,13 +46,14 @@ exports.CheckoutExpress = function (req, res) {
 };
 
 exports.IPNDestination = function (req, res) {
+  console.log("ipn destination");
   const ipnModel = req.body;
   ypco.checkout
     .IsIPNAuthentic(ipnModel, useSandbox)
     .then((ipnStatus) => {
       //This means the payment is completed
       //You can now mark the order as "Paid" or "Completed" here and start the delivery process
-      console.log(ipnStatus);
+
       res.json({ "IPN Status": ipnStatus });
     })
     .catch((err) => {
@@ -58,28 +61,32 @@ exports.IPNDestination = function (req, res) {
       res.json({ Error: err });
     });
 };
-
 exports.PaymentSuccessReturnUrl = function (req, res) {
   const params = req.query;
   const pdtRequestModel = new ypco.pdtRequestModel(
-    // pdtToken,
+    pdtToken,
     params.TransactionId,
     params.MerchantOrderId,
     useSandbox
   );
-  console.log("success url called");
   ypco.checkout
     .RequestPDT(pdtRequestModel)
-    .then((pdtJson) => {
+    .then(async (pdtJson) => {
       if (pdtJson.result == "SUCCESS") {
         // or `pdtJson.Status == 'Paid'`
-        console.log("success url called - Paid");
         //This means the payment is completed.
         //You can extract more information of the transaction from the pdtResponse
         //You can now mark the order as "Paid" or "Completed" here and start the delivery process
+        const user = User.findOne({ orderId: pdtJson.MerchantOrderId });
+        if (user) {
+          const l = user.left ? user.left : 0;
+          await user.updateOne({ orderId: null, left: 10 + 1 });
+        }
       }
       // res.redirect("/");
-      res.send("success");
+      res.send(
+        "success paid reopen the app and procceed you proceess soon it will be replaced with deeplinking"
+      );
     })
     .catch((err) => {
       //This means the pdt request has failed.
@@ -95,7 +102,7 @@ exports.PaymentSuccessReturnUrl = function (req, res) {
 exports.PaymentCancelReturnUrl = function (req, res) {
   const params = req.query;
   const pdtRequestModel = new ypco.pdtRequestModel(
-    // pdtToken,
+    pdtToken,
     params.TransactionId,
     params.MerchantOrderId,
     useSandbox
@@ -123,7 +130,7 @@ exports.PaymentCancelReturnUrl = function (req, res) {
 exports.PaymentFailureUrl = function (req, res) {
   const params = req.query;
   const pdtRequestModel = new ypco.pdtRequestModel(
-    // pdtToken,
+    pdtToken,
     params.TransactionId,
     params.MerchantOrderId,
     useSandbox

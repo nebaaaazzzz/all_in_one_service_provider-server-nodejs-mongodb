@@ -38,6 +38,7 @@ const userSchema = new mongoose.Schema(
       maxlength: 500,
     },
     skills: [String],
+    orderId: String,
     profilePic: {
       type: mongoose.Types.ObjectId,
       default: "62d117b38690f1020ce194d7",
@@ -80,6 +81,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
 
       default: false,
+    },
+    left: {
+      type: Number,
+      default: 5,
     },
   },
   {

@@ -61,6 +61,7 @@ const houseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    contain: [String],
     bestDescribe: {
       type: [String],
       required: true,
