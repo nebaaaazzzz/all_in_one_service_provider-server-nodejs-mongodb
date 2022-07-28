@@ -6,13 +6,10 @@ const bucket = require("../../config/db");
 const validator = require("validator").default;
 const User = require("../../models/User");
 const ErrorHandler = require("../../utils/ErrorHandler");
-route.post("/postjob", upload.single("document"), async (req, res) => {
-  if (user?.left > 0) {
+route.post("/postjob", upload.single("document"), async (req, res, next) => {
+  if (req.user?.left > 0) {
     const obj = JSON.parse(req.body.body);
     obj.document = req?.file?.id;
-    if (obj.salary) {
-      obj.salary = Number(obj.price);
-    }
     if (obj.budget) {
       obj.budget.from = Number(obj.budget.from);
       obj.budget.to = Number(obj.budget.to);
@@ -20,14 +17,14 @@ route.post("/postjob", upload.single("document"), async (req, res) => {
     obj.location = { type: "Point", coordinates: obj.center };
     delete obj.center;
     await Job.create({ ...obj, user: req.user.id });
-    await User.findByIdAndUpdate(req.user, {
-      left: user.left - 1,
+    await User.findByIdAndUpdate(req.user.id, {
+      left: req.user.left - 1,
     });
-    res.status(201).send({
+    return res.status(201).send({
       success: true,
     });
   }
-  next(new ErrorHandler("please py", 400));
+  next(new ErrorHandler("please pay", 400));
 });
 
 route.get("/job/:id", async (req, res, next) => {
@@ -85,7 +82,7 @@ route.get("/applicants/:id", async (req, res, next) => {
   }
   next(new ErrorHandler("job not found", 404));
 });
-route.get("/arroved/:id", async (req, res, next) => {
+route.get("/approved/:id", async (req, res, next) => {
   if (validator.isMongoId(req.params.id)) {
     const job = await Job.findById(req.params.id);
     if (job) {
@@ -105,6 +102,7 @@ route.get("/arroved/:id", async (req, res, next) => {
   }
   next(new ErrorHandler("job not found", 404));
 });
+
 route.get("/rejected/:id", async (req, res, next) => {
   if (validator.isMongoId(req.params.id)) {
     const job = await Job.findById(req.params.id);

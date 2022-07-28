@@ -36,11 +36,40 @@ route.get("/", async (req, res, next) => {
     });
   }
   if (query.region) {
+    const option = "im";
     const region = query.region;
     jobQuery = jobQuery.where({
-      region: { $eq: region },
+      $or: [
+        { region: { $eq: region } },
+        { placeName: { $regex: region, $options: option } },
+      ],
     });
   }
+  if (query.category) {
+    const category = query.category;
+    jobQuery = jobQuery.where({
+      category: { $eq: category },
+    });
+  }
+  if (query.gender) {
+    const gender = query.gender;
+    jobQuery = jobQuery.where({
+      gender: { $eq: gender },
+    });
+  }
+  if (query.permanent) {
+    const permanent = query.permanent;
+    jobQuery = jobQuery.where({
+      permanent: { $eq: permanent },
+    });
+  }
+  if (query.cvRequired) {
+    const cvRequired = query.cvRequired;
+    jobQuery = jobQuery.where({
+      cvRequired: { $eq: cvRequired },
+    });
+  }
+
   const jobs = await jobQuery
     .where({ applicants: { $nin: [req.user.id] } }) //not to send applied houses
     .where({ user: { $ne: mongoose.Types.ObjectId(req.user.id) } }) // not to send
@@ -52,7 +81,7 @@ route.get("/", async (req, res, next) => {
 route.get("/job/:id", async (req, res) => {
   const job = await Job.findById(req.params.id);
   if (!job) {
-    return next(new ErrorHandler("house not found", 404));
+    return next(new ErrorHandler("job not found", 404));
   }
   if (job.applicants) {
     const bool = job.applicants.includes(req.user.id);
@@ -81,6 +110,7 @@ route.get("/job/:id", async (req, res) => {
     success: true,
     data: job,
   });
+  //
 });
 
 route.post("/apply/:id", async (req, res, next) => {

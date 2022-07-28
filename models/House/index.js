@@ -5,7 +5,6 @@ const houseSchema = new mongoose.Schema(
     /*
     place type -apartment, house , secoundary unit , bed and breakfast ,hotel
     which of these best descrbe your place 
-    
     */
     placeDescription: {
       title: String,
@@ -34,11 +33,7 @@ const houseSchema = new mongoose.Schema(
       required: true,
     },
     placeName: { type: String, required: true },
-    guestSize: {
-      beds: { type: Number, default: 0 },
-      kitchens: { type: Number, default: 0 },
-      bathrooms: { type: Number, default: 0 },
-    },
+
     saftyItems: {
       type: [String],
       required: true,
@@ -48,10 +43,7 @@ const houseSchema = new mongoose.Schema(
       required: true,
     },
     amenities: { type: [String], required: true },
-    propertyType: {
-      type: String,
-      required: true,
-    },
+
     houseImages: {
       type: [String],
       required: true,
@@ -61,7 +53,6 @@ const houseSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    contain: [String],
     bestDescribe: {
       type: [String],
       required: true,
@@ -72,7 +63,7 @@ const houseSchema = new mongoose.Schema(
     price: {
       type: Number,
       required: true,
-      min: 0,
+      min: 100,
     },
   },
 

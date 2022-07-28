@@ -11,12 +11,14 @@ const jobSchema = new mongoose.Schema(
       from: Number,
       to: Number,
     },
+    paymentStyle: String,
     // quantity: Number,
     gender: {
       type: String,
       enum: ["male", "female", "both"],
       lowercase: true,
     },
+    hourPerWeek: String,
 
     permanent: {
       type: Boolean,
@@ -46,7 +48,7 @@ const jobSchema = new mongoose.Schema(
     },
     description: {
       type: String,
-      minLenght: 30,
+      minLenght: 50,
       maxlength: 500,
     },
     user: {

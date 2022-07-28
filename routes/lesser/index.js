@@ -4,23 +4,27 @@ const validator = require("validator").default;
 const House = require("./../../models/House");
 const User = require("./../../models/User");
 const ErrorHandler = require("../../utils/ErrorHandler");
-route.post("/posthouse", upload.array("houseImage", 100), async (req, res) => {
-  if (user?.left > 0) {
-    const obj = JSON.parse(req.body.body);
-    obj.houseImages = req.files.map((file) => file.id);
-    obj.price = Number(obj.price);
-    obj.location = { coordinates: obj.center };
-    delete obj.center;
-    await House.create({ ...obj, user: req.user.id });
-    await User.findByIdAndUpdate(req.user, {
-      left: user.left - 1,
-    });
-    res.status(201).send({
-      success: true,
-    });
+route.post(
+  "/posthouse",
+  upload.array("houseImage", 20),
+  async (req, res, next) => {
+    if (req.user?.left > 0) {
+      const obj = JSON.parse(req.body.body);
+      obj.houseImages = req.files.map((file) => file.id);
+      obj.price = Number(obj.price);
+      obj.location = { coordinates: obj.center };
+      delete obj.center;
+      await House.create({ ...obj, user: req.user.id });
+      await User.findByIdAndUpdate(req.user.id, {
+        left: req.user.left - 1,
+      });
+      return res.status(201).send({
+        success: true,
+      });
+    }
+    next(new ErrorHandler("please py", 400));
   }
-  next(new ErrorHandler("please py", 400));
-});
+);
 route.post("/edit-post/:id", async (req, res, next) => {
   if (validator.isMongoId(req.params.id)) {
     const house = await House.findById(req.params.id);
@@ -177,7 +181,6 @@ route.get("/:houseId/:userId", async (req, res, next) => {
   ) {
     const house = await House.findById(req.params.houseId);
     const user = await User.findById(req.params.userId);
-    console.log(house.applicants);
     if (house && user) {
       if (house.applicants.length) {
         const bool = house.applicants.includes(req.params.userId);

@@ -8,28 +8,24 @@ route.get("/", async (req, res, next) => {
   let houseQuery = House.find();
   const page = query.page > 1 ? query.page : 1;
   const size = 5;
-  if (query.nearby) {
-    houseQuery = houseQuery.where({
-      location: {
-        $near: {
-          $geometry: {
-            type: "Point",
-            coordinates: [1, 2],
+  if (query.nearBy) {
+    const coords = query.nearBy.split(",");
+    if (Boolean(coords[0]) && Boolean(coords[1])) {
+      houseQuery = houseQuery.where({
+        location: {
+          $near: {
+            $geometry: {
+              type: "Point",
+              coordinates: coords,
+            },
           },
         },
-      },
-    });
-  }
-  if (query.region) {
-    const region = query.region;
-    houseQuery = houseQuery.where({
-      region: { $eq: region },
-    });
+      });
+    }
   }
   if (query.search) {
     const keyword = query.search;
     const option = "im";
-
     houseQuery = houseQuery.where({
       $or: [
         { placeDescription: { $regex: keyword, $options: option } },
@@ -41,6 +37,13 @@ route.get("/", async (req, res, next) => {
       ],
     });
   }
+  if (query.region) {
+    const region = query.region;
+    houseQuery = houseQuery.where({
+      region: { $eq: region },
+    });
+  }
+
   if (query.category) {
     const category = query.category;
     houseQuery = houseQuery.where({

@@ -13,7 +13,6 @@ const sellerCode = process.env.YENEPAY_SELLRCODE,
 exports.CheckoutExpress = function (req, res) {
   const merchantOrderId = req.orderId; //"YOUR_UNIQUE_ID_FOR_THIS_ORDER";  //can also be set null
   const expiresAfter = 30; //"NUMBER_OF_MINUTES_BEFORE_THE_ORDER_EXPIRES"; //setting null means it never expires
-  console.log(req.orderId);
   const checkoutOptions = ypco.checkoutOptions(
     sellerCode,
     merchantOrderId,

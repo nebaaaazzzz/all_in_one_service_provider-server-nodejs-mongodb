@@ -105,7 +105,7 @@ app.use("/", passport.authenticate("jwt", { session: false }), isSuspended);
 app.use(isVerified);
 
 app.use("/", commonRouter);
-
+require("./config/mailjit");
 app.use("/user", userRouter);
 app.use("/employer", employerRouter);
 app.use("/employee", employeeRouter);
