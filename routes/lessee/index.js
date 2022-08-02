@@ -26,28 +26,39 @@ route.get("/", async (req, res, next) => {
   if (query.search) {
     const keyword = query.search;
     const option = "im";
+    console.log(keyword);
     houseQuery = houseQuery.where({
       $or: [
-        { placeDescription: { $regex: keyword, $options: option } },
+        // { placeDescription: { $regex: keyword, $options: option } },
         { region: { $regex: keyword, $options: option } },
         { placeKind: { $regex: keyword, $options: option } },
         { placeName: { $regex: keyword, $options: option } },
-        { propertyType: { $regex: keyword, $options: option } },
         { detailDescription: { $regex: keyword, $options: option } },
       ],
     });
   }
+  if (query.price) {
+    const price = query.price;
+    houseQuery = houseQuery.where({
+      price: { $gt: price },
+    });
+  }
   if (query.region) {
     const region = query.region;
+    const option = "im";
+
     houseQuery = houseQuery.where({
-      region: { $eq: region },
+      $or: [
+        { region: { $eq: region } },
+        { placeName: { $regex: region, $options: option } },
+      ],
     });
   }
 
-  if (query.category) {
-    const category = query.category;
+  if (query.propertyType) {
+    const propertyType = query.propertyType;
     houseQuery = houseQuery.where({
-      category: { $eq: category },
+      "placeDescription.title": { $eq: propertyType },
     });
   }
   const houses = await houseQuery
@@ -55,6 +66,7 @@ route.get("/", async (req, res, next) => {
     .where({ approved: { $nin: [req.user.id] } }) //not to send approved houses
     .where({ rejected: { $nin: [req.user.id] } }) //not to send rejected houses
     .where({ user: { $ne: mongoose.Types.ObjectId(req.user.id) } }) // not to send
+    .where({ deleted: { $ne: true } }) // not to send
     .sort({ createdAt: -1 })
     .skip((page - 1) * size)
     .limit(size);
@@ -71,7 +83,7 @@ route.post("/apply/:id", async (req, res, next) => {
         $set: { applicants: [] },
         $addToSet: { applicants: req.user.id },
       });
-      await User.findByIdAndUpdate({
+      await User.findByIdAndUpdate(req.user.id, {
         left: req.user?.left - 1,
       });
     } else {
@@ -80,14 +92,14 @@ route.post("/apply/:id", async (req, res, next) => {
         await house.updateOne({
           $pull: { applicants: req.user.id },
         });
-        await User.findByIdAndUpdate({
+        await User.findByIdAndUpdate(req.user.id, {
           left: req.user?.left + 1,
         });
       } else {
         await house.updateOne({
           $addToSet: { applicants: req.user.id },
         });
-        await User.findByIdAndUpdate({
+        await User.findByIdAndUpdate(req.user.id, {
           left: req.user?.left - 1,
         });
       }

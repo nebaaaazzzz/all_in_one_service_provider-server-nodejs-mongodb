@@ -10,7 +10,7 @@ const jwt = require("jsonwebtoken");
 
 const catchAsyncError = require("../utils/catchAsyncError");
 
-const registerUser = catchAsyncError(async (req, res, next) => {
+const registerUser = async (req, res, next) => {
   if (!validator.equals(req.body.password, req.body.confirmPassword)) {
     return next(new ErrorHandler("password mismatch", 400));
   } else {
@@ -40,9 +40,10 @@ const registerUser = catchAsyncError(async (req, res, next) => {
             gender: req?.body?.gender,
             dateOfBirth: req?.body?.date,
             randString,
+            verified: true,
           });
           // sendText(req.body.phoneNumber, "code " + randString);
-          return res.status(201).send(user);
+          return res.status(201).send(doc);
         }
 
         try {
@@ -57,16 +58,13 @@ const registerUser = catchAsyncError(async (req, res, next) => {
             gender: req?.body?.gender,
             dateOfBirth: req?.body?.date,
             randString,
+            verified: true,
           });
-          sendText(req.body.phoneNumber, "code " + randString);
+          // sendText(req.body.phoneNumber, "code " + randString);
           return res.status(201).send(doc);
         } catch (err) {
           throw err;
         }
-
-        return res.status(201).send({
-          data: doc,
-        });
       } else {
         return next(new ErrorHandler("invalid phonenumber", 400));
       }
@@ -74,7 +72,7 @@ const registerUser = catchAsyncError(async (req, res, next) => {
       return next(new ErrorHandler("some fields required", 400));
     }
   }
-});
+};
 const validateUserAccount = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.body.id);
   if (user) {

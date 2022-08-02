@@ -18,6 +18,7 @@ const jobSchema = new mongoose.Schema(
       enum: ["male", "female", "both"],
       lowercase: true,
     },
+    deleted: { type: Boolean, default: false },
     hourPerWeek: String,
 
     permanent: {
@@ -67,7 +68,6 @@ const jobSchema = new mongoose.Schema(
         required: true,
       },
     },
-
     region: String,
   },
   {

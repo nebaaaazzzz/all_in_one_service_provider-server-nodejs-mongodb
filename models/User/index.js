@@ -100,7 +100,7 @@ userSchema.pre(
   async function (next) {
     const query = this;
     const update = this.getUpdate();
-    if (!update.password) {
+    if (!update?.password) {
       return next();
     }
     update.password = await hash(update.password, 10);

@@ -73,6 +73,7 @@ route.get("/", async (req, res, next) => {
   const jobs = await jobQuery
     .where({ applicants: { $nin: [req.user.id] } }) //not to send applied houses
     .where({ user: { $ne: mongoose.Types.ObjectId(req.user.id) } }) // not to send
+    .where({ deleted: { $ne: true } }) // not to send
     .sort({ createdAt: -1 })
     .skip((page - 1) * size)
     .limit(size);
@@ -122,7 +123,7 @@ route.post("/apply/:id", async (req, res, next) => {
         $set: { applicants: [] },
         $addToSet: { applicants: req.user.id },
       });
-      await User.findByIdAndUpdate({
+      await User.findByIdAndUpdate(req.user.id, {
         left: req.user?.left - 1,
       });
     } else {
@@ -131,14 +132,14 @@ route.post("/apply/:id", async (req, res, next) => {
         await job.updateOne({
           $pull: { applicants: req.user.id },
         });
-        await User.findByIdAndUpdate({
+        await User.findByIdAndUpdate(req.user.id, {
           left: req.user?.left + 1,
         });
       } else {
         await job.updateOne({
           $addToSet: { applicants: req.user.id },
         });
-        await User.findByIdAndUpdate({
+        await User.findByIdAndUpdate(req.user.id, {
           left: req.user?.left - 1,
         });
       }

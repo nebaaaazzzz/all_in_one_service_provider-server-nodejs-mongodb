@@ -48,6 +48,20 @@ route.get("/house/:id", async (req, res, next) => {
   }
   return next(new ErrorHandler("house not found", 404));
 });
+route.delete("/house/:id", async (req, res, next) => {
+  if (validator.isMongoId(req.params.id)) {
+    const house = await House.findById(req.params.id);
+    if (house) {
+      await house.updateOne({
+        deleted: true,
+      });
+      return res.send({
+        success: true,
+      });
+    }
+  }
+  return next(new ErrorHandler("house not found", 404));
+});
 route.get("/posts", async (req, res) => {
   let page = req?.query?.page;
   page = page > 1 ? page : 1;

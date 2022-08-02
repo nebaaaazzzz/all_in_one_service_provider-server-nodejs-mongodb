@@ -39,6 +39,40 @@ route.get("/job/:id", async (req, res, next) => {
   }
   next(new ErrorHandler("job not found", 404));
 });
+
+route.patch(
+  "/update/:id",
+  upload.single("document"),
+  async (req, res, next) => {
+    if (validator.isMongoId(req.params.id)) {
+      const job = await Job.findById(req.params.id);
+      if (job) {
+        job.updateOne({
+          ...req.body,
+          ...(req?.file?.id ? { document: req.file.id } : {}),
+        });
+        return res.send({
+          success: true,
+        });
+      }
+    }
+    next(new ErrorHandler("job not found", 404));
+  }
+);
+route.delete("/job/:id", async (req, res, next) => {
+  if (validator.isMongoId(req.params.id)) {
+    const job = await Job.findById(req.params.id);
+    if (job) {
+      await job.updateOne({
+        deleted: true,
+      });
+      return res.send({
+        success: true,
+      });
+    }
+  }
+  return next(new ErrorHandler("job not found", 404));
+});
 route.post("/edit-post/:id", async (req, res, next) => {
   if (validator.isMongoId(req.params.id)) {
     const job = await Job.findById(req.params.id);
@@ -49,6 +83,7 @@ route.post("/edit-post/:id", async (req, res, next) => {
   }
   return next(new ErrorHandler("house not found", 404));
 });
+
 route.get("/posts", async (req, res) => {
   let page = req?.query?.page;
   page = page > 1 ? page : 1;

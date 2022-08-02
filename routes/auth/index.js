@@ -13,7 +13,11 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 route.post("/login", loginUser);
-route.post("/register", registerUser);
+route.post(
+  "/register",
+
+  registerUser
+);
 // route.post("/register", (req, res) => {
 //   console.log(req.body);
 //   res.send("hello");
