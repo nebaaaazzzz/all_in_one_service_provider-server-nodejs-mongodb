@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 // require("./config/textmsg");
 const mongoose = require("mongoose");
 const express = require("express");
+
 const app = express();
 const cors = require("cors");
 
@@ -48,7 +49,8 @@ const isAdmin = (req, res, next) => {
 
 /*middleware */
 app.use(express.json());
-
+// app.use("/admin", isAdmin, adminRouter);
+app.use("/admin", adminRouter);
 /*
 security
 */
@@ -62,7 +64,57 @@ Content-Security-Policy
 */
 /*auth router */
 app.use("/auth", authRouter);
+/**
+ temporary solution so lazy
+ */
 
+app.get("/profile-pic/:id", async (req, res, next) => {
+  const cursor = await bucket.find({
+    _id: new mongoose.Types.ObjectId(req.params.id),
+  });
+  const files = await cursor.toArray();
+  if (files.length) {
+    files.forEach((doc) => {
+      res.set("Content-Type", doc.contentType);
+      res.set("Content-Length", doc.length);
+      bucket.openDownloadStream(doc._id).pipe(res);
+    });
+  } else {
+    next(new ErrorHandler("notfound image", 404));
+  }
+});
+app.get("/houseImage/:id", async (req, res, next) => {
+  const cursor = await bucket.find({
+    _id: new mongoose.Types.ObjectId(req.params.id),
+  });
+  const files = await cursor.toArray();
+  if (files.length) {
+    files.forEach((doc) => {
+      res.set("Content-Type", doc.contentType);
+      res.set("Content-Length", doc.length);
+      bucket.openDownloadStream(doc._id).pipe(res);
+    });
+  } else {
+    next(new ErrorHandler("notfound image", 404));
+  }
+});
+app.get("/cv/:filename", async (req, res, next) => {
+  const cursor = await bucket.find({
+    filename: req.params.filename,
+  });
+  const files = await cursor.toArray();
+  if (files.length) {
+    files.forEach((doc) => {
+      res.set("Content-Type", doc.contentType);
+      res.set("Content-Length", doc.length);
+      bucket.openDownloadStream(doc._id).pipe(res);
+    });
+  } else {
+    next(new ErrorHandler("file Not found", 404));
+  }
+});
+
+/*please solve it */
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -109,7 +161,6 @@ app.use("/employer", employerRouter);
 app.use("/employee", employeeRouter);
 app.use("/lessee", lesseeRouter);
 app.use("/lesser", lesserRouter);
-app.use("/admin", isAdmin, adminRouter);
 /*global error middleware */
 app.use((err, req, res, next) => {
   const statusCode = err.statusCode || 400;

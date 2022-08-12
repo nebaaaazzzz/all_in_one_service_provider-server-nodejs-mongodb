@@ -74,8 +74,10 @@ route.get("/", async (req, res, next) => {
     .where({ applicants: { $nin: [req.user.id] } }) //not to send applied houses
     .where({ user: { $ne: mongoose.Types.ObjectId(req.user.id) } }) // not to send
     .where({ deleted: { $ne: true } }) // not to send
+    .where({ isApproved: { $eq: 1 } }) // not to send
     .sort({ createdAt: -1 })
     .skip((page - 1) * size)
+
     .limit(size);
   res.send(jobs);
 });

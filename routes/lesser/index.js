@@ -25,16 +25,34 @@ route.post(
     next(new ErrorHandler("please py", 400));
   }
 );
-route.post("/edit-post/:id", async (req, res, next) => {
-  if (validator.isMongoId(req.params.id)) {
-    const house = await House.findById(req.params.id);
-    if (house) {
-      await house.updateOne(req.body);
-      return res.send();
+route.post(
+  "/edit-post/:id",
+  upload.array("houseImage", 20),
+  async (req, res, next) => {
+    if (validator.isMongoId(req.params.id)) {
+      const house = await House.findById(req.params.id);
+      if (house) {
+        const obj = JSON.parse(req.body.body);
+        obj.houseImages = req.files.map((file) => file.id);
+        obj.price = Number(obj.price);
+        if (obj.center) {
+          obj.location = { coordinates: obj.center };
+          delete obj.center;
+        }
+        if (obj.imgFilterList) {
+          const imgFilter = house.houseImages.filter((img) => {
+            return obj.imgFilterList.includes(img);
+          });
+          obj.houseImages = [...obj.houseImages, ...imgFilter];
+        }
+
+        await house.updateOne(obj);
+        return res.send({ success: true });
+      }
     }
+    return next(new ErrorHandler("house not found", 404));
   }
-  return next(new ErrorHandler("house not found", 404));
-});
+);
 
 route.get("/house/:id", async (req, res, next) => {
   if (validator.isMongoId(req.params.id)) {

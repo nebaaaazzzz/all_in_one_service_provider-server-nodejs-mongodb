@@ -3,11 +3,25 @@ const User = require("../../models/User");
 const bucket = require("../../config/db");
 const upload = require("../../config/fileHandler");
 const mongoose = require("mongoose");
+const Feedback = require("../../models/Feedback");
 const ErrorHandler = require("../../utils/ErrorHandler");
 // 62d04d20cec61b8faed036d0
 route.get("/me", async (req, res) => {
   const user = await User.findById(req.user.id).select("+phoneNumber");
   res.send(user);
+});
+
+route.post("/feedback", async (req, res) => {
+  const { comment, description } = req.body;
+  await Feedback.create({
+    comment,
+    description,
+    user: req.user.id,
+  });
+
+  res.status(201).send({
+    success: true,
+  });
 });
 route.post("/profile-pic", upload.single("profile"), async (req, res) => {
   res.status(201).send("profile pic create");

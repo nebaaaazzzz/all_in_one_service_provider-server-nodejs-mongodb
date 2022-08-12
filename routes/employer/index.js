@@ -9,7 +9,7 @@ const ErrorHandler = require("../../utils/ErrorHandler");
 route.post("/postjob", upload.single("document"), async (req, res, next) => {
   if (req.user?.left > 0) {
     const obj = JSON.parse(req.body.body);
-    obj.document = req?.file?.id;
+    obj.document = req?.file?.filename;
     if (obj.budget) {
       obj.budget.from = Number(obj.budget.from);
       obj.budget.to = Number(obj.budget.to);
@@ -39,7 +39,11 @@ route.get("/job/:id", async (req, res, next) => {
   }
   next(new ErrorHandler("job not found", 404));
 });
-
+// route.get("/feedback", async (req, res) => {
+//   res.status(201).send({
+//     success: true,
+//   });
+// });
 route.patch(
   "/update/:id",
   upload.single("document"),
@@ -47,9 +51,9 @@ route.patch(
     if (validator.isMongoId(req.params.id)) {
       const job = await Job.findById(req.params.id);
       if (job) {
-        job.updateOne({
-          ...req.body,
-          ...(req?.file?.id ? { document: req.file.id } : {}),
+        await job.updateOne({
+          ...JSON.parse(req.body.body),
+          ...(req?.file?.filename ? { document: req.file.filename } : {}),
         });
         return res.send({
           success: true,
@@ -92,6 +96,7 @@ route.get("/posts", async (req, res) => {
   const jobs = await query
     .where({ user: { $eq: new mongoose.Types.ObjectId(req.user.id) } })
     .sort({ createdAt: -1 })
+    .where({ deleted: { $eq: false } })
     .limit(pageSize)
     .skip(pageSize * (page - 1));
   res.send(jobs);

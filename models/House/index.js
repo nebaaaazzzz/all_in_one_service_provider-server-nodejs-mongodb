@@ -60,6 +60,11 @@ const houseSchema = new mongoose.Schema(
     applicants: [],
     approved: [],
     rejected: [],
+    isApproved: {
+      default: 0,
+      type: Number,
+      enum: [0, 1, 2], //0 pending 1 approved 2 rejected
+    },
     price: {
       type: Number,
       required: true,

@@ -44,8 +44,8 @@ const userSchema = new mongoose.Schema(
       default: "62d117b38690f1020ce194d7",
     },
     profilePics: [mongoose.Types.ObjectId],
-    cv: mongoose.Types.ObjectId,
-    cvs: [mongoose.Types.ObjectId],
+    cv: String,
+    cvs: [String],
     password: {
       select: false,
       type: String,

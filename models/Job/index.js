@@ -56,6 +56,11 @@ const jobSchema = new mongoose.Schema(
       type: mongoose.Types.ObjectId,
       ref: "User",
     },
+    isApproved: {
+      default: 0,
+      type: Number,
+      enum: [0, 1, 2], //0 pending 1 approved 2 rejected
+    },
     location: {
       type: {
         type: String,

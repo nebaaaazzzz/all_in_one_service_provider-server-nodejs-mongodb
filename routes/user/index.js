@@ -1,8 +1,11 @@
 const route = require("express").Router();
 const multer = require("multer");
+
 const catchAsyncError = require("../../utils/catchAsyncError");
 const upload = require("./../../config/fileHandler");
+const FeedFeedback = require("./../../models/Feedback");
 const User = require("../../models/User");
+const Feedback = require("./../../models/Feedback");
 route.post(
   "/profile-pic",
   catchAsyncError(async (req, res, next) => {
@@ -20,6 +23,7 @@ route.post(
     });
   })
 );
+
 route.patch(
   "/update-profile",
   upload.fields([
@@ -28,6 +32,7 @@ route.patch(
   ]),
   async (req, res, next) => {
     let body;
+    let cvName;
     if (req.body?.data) {
       body = JSON.parse(req.body?.data);
     }
@@ -37,7 +42,7 @@ route.patch(
       profileId = req.files.profile[0].id;
     }
     if (req.files.cv) {
-      cvId = req.files.cv[0].id;
+      cvName = req.files.cv[0].filename;
     }
     const user = await User.findById(req.user.id);
     if (user) {
@@ -47,13 +52,16 @@ route.patch(
           profilePic: profileId,
           ...body,
         });
-      } else if (cvId) {
-        await user.updateOne({
-          ...(user.cv && { $addToSet: { cvs: user.cv } }),
-          $addToSet: { cvs: user.cv },
-          cv: cvId,
-          ...body,
-        });
+      } else if (cvName) {
+        await user
+          .updateOne({
+            cv: cvName,
+            ...body,
+          })
+          .updateOne({
+            ...(user.cv && { $addToSet: { cvs: user.cv } }),
+          });
+        // $addToSet: { cvs: user.cv },
       } else {
         await user.updateOne({
           $addToSet: { profilePics: user.profile },
@@ -72,5 +80,6 @@ route.patch("/change-password", async (req, res) => {
   });
   res.send("success");
 });
+
 route.patch("/change-phone", async (req, res) => {});
 module.exports = route;

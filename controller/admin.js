@@ -2,28 +2,22 @@ const catchAsyncError = require("../utils/catchAsyncError");
 const ErrorHandler = require("../utils/ErrorHandler");
 const User = require("./../models/User");
 const getUsers = catchAsyncError(async (req, res, next) => {
-  const queryp = req.query;
-  const query = User.find();
-  const page = queryp.page && query.page > 0 ? query.page : 1;
-  const docs = await query
-    .skip((page - 1) * 15)
-    .limit(15)
+  const query = req.query;
+  const userQuery = User.find();
+  const page = query.page && query.page > 0 ? query.page : 1;
+  const docs = await userQuery
+    .skip((page - 1) * 5)
+    .limit(5)
     .sort();
   if (docs) {
-    return res.send({
-      success: true,
-      data: docs,
-    });
+    return res.send(docs);
   }
   next(new ErrorHandler("documents cann't be found", 500));
 });
 const getUser = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.params.id);
   if (user) {
-    res.send({
-      success: true,
-      data: user,
-    });
+    res.send(user);
   } else {
     next(new ErrorHandler("user not found", 404));
   }
