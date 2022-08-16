@@ -88,6 +88,7 @@ route.get("/posts", async (req, res) => {
   const query = House.find({ user: req.user.id });
   const houses = await query
     .sort({ createdAt: -1 })
+    .where({ deleted: { $eq: false } })
     .limit(pageSize)
     .skip(pageSize * (page - 1));
   res.send(houses);
@@ -150,7 +151,7 @@ route.get("/rejected/:id", async (req, res, next) => {
   }
   next(new ErrorHandler("house not found", 404));
 });
-route.get("/approve/:houseId/:userId", async (req, res, next) => {
+route.get("/approve/:userId/:houseId", async (req, res, next) => {
   if (
     validator.isMongoId(req.params.houseId) &&
     validator.isMongoId(req.params.userId)
@@ -163,11 +164,11 @@ route.get("/approve/:houseId/:userId", async (req, res, next) => {
         const bool = applicants.includes(req.params.userId);
         if (bool) {
           await house
-            .UpateOne({
+            .updateOne({
               $addToSet: { approved: req.params.userId },
             })
             .updateOne({
-              $pull: { votes: { $eq: req.params.userId } },
+              $pull: { applicants: { $eq: req.params.userId } },
             });
         } else {
           return next("user not applied", 404);
@@ -178,7 +179,7 @@ route.get("/approve/:houseId/:userId", async (req, res, next) => {
   }
   next(new ErrorHandler("user or house not found", 404));
 });
-route.get("/reject/:houseId/:userId", async (req, res, next) => {
+route.get("/reject/:userId/:houseId", async (req, res, next) => {
   if (
     validator.isMongoId(req.params.houseId) &&
     validator.isMongoId(req.params.userId)
@@ -191,11 +192,11 @@ route.get("/reject/:houseId/:userId", async (req, res, next) => {
         const bool = applicants.includes(req.params.userId);
         if (bool) {
           await house
-            .UpateOne({
+            .updateOne({
               $addToSet: { rejected: req.params.userId },
             })
             .updateOne({
-              $pull: { votes: { $eq: req.params.userId } },
+              $pull: { applicants: { $eq: req.params.userId } },
             });
         } else {
           return next("user not applied", 404);

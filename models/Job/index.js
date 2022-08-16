@@ -15,7 +15,6 @@ const jobSchema = new mongoose.Schema(
     // quantity: Number,
     gender: {
       type: String,
-      enum: ["male", "female", "both"],
       lowercase: true,
     },
     deleted: { type: Boolean, default: false },

@@ -5,7 +5,7 @@ const express = require("express");
 
 const app = express();
 const cors = require("cors");
-
+const validator = require("validator").default;
 app.use(cors());
 // const morgan = require('morgan')
 const bucket = require("./config/db");
@@ -69,16 +69,18 @@ app.use("/auth", authRouter);
  */
 
 app.get("/profile-pic/:id", async (req, res, next) => {
-  const cursor = await bucket.find({
-    _id: new mongoose.Types.ObjectId(req.params.id),
-  });
-  const files = await cursor.toArray();
-  if (files.length) {
-    files.forEach((doc) => {
-      res.set("Content-Type", doc.contentType);
-      res.set("Content-Length", doc.length);
-      bucket.openDownloadStream(doc._id).pipe(res);
+  if (validator.isMongoId(req.params.id)) {
+    const cursor = await bucket.find({
+      _id: new mongoose.Types.ObjectId(req.params.id),
     });
+    const files = await cursor.toArray();
+    if (files.length) {
+      files.forEach((doc) => {
+        res.set("Content-Type", doc.contentType);
+        res.set("Content-Length", doc.length);
+        bucket.openDownloadStream(doc._id).pipe(res);
+      });
+    }
   } else {
     next(new ErrorHandler("notfound image", 404));
   }

@@ -4,6 +4,8 @@ const {
   registerUser,
   validateUserAccount,
   loginUser,
+  forgotPassword,
+  forgotChangePassword,
 } = require("../../controller/authController");
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
@@ -12,12 +14,13 @@ const limiter = rateLimit({
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
+route.get("/info", async () => {
+  res.send("{info}");
+});
 route.post("/login", loginUser);
-route.post(
-  "/register",
-
-  registerUser
-);
+route.post("/register", registerUser);
+route.post("/forgot-password", forgotPassword);
+route.post("/forgot-change-password", forgotChangePassword);
 // route.post("/register", (req, res) => {
 //   console.log(req.body);
 //   res.send("hello");

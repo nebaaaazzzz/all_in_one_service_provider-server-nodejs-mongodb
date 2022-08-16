@@ -3,6 +3,16 @@ const dotenv = require("dotenv");
 dotenv.config();
 const app = require("./app.js").app;
 const server = http.createServer(app);
+const Server = require("socket.io").Server;
+const io = new Server(server, {
+  /* options */
+});
+let skt;
+io.on("connection", (socket) => {
+  skt = socket;
+  console.log("connection created");
+  // ...
+});
 
 const os = require("os");
 let HOSTNAME = "localhost";
@@ -17,3 +27,4 @@ server.listen(PORT, HOSTNAME, () => {
 // server.listen(PORT, () => {
 //   console.log(`listening on *${server.address().address}:${PORT}`);
 // });
+module.exports = skt;

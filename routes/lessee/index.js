@@ -26,7 +26,6 @@ route.get("/", async (req, res, next) => {
   if (query.search) {
     const keyword = query.search;
     const option = "im";
-    console.log(keyword);
     houseQuery = houseQuery.where({
       $or: [
         // { placeDescription: { $regex: keyword, $options: option } },
@@ -124,41 +123,6 @@ route.get("/applied", async (req, res) => {
 
   res.send(houses);
 });
-
-route.get("/house/:id", async (req, res, next) => {
-  const house = await House.findById(req.params.id);
-  if (!house) {
-    return next(new ErrorHandler("house not found", 404));
-  }
-  if (house.applicants) {
-    const bool = house.applicants.includes(req.user.id);
-    if (bool) {
-      const result = house.toObject();
-      result.applied = true;
-      return res.send({
-        success: true,
-        data: result,
-      });
-    }
-  }
-  if (house.approved) {
-    const bool = house.approved.includes(req.user.id);
-    if (bool) {
-      const result = house.toObject();
-      result.approved = true;
-      result.user = req.user;
-      return res.send({
-        success: true,
-        data: result,
-      });
-    }
-  }
-  res.send({
-    success: true,
-    data: house,
-  });
-});
-
 route.get("/approved", async (req, res) => {
   const query = req.query;
   const houseQuery = House.find();
@@ -187,6 +151,51 @@ route.get("/rejected", async (req, res) => {
     .limit(size);
 
   res.send(houses);
+});
+route.get("/house/:id", async (req, res, next) => {
+  const house = await House.findById(req.params.id);
+  if (!house) {
+    return next(new ErrorHandler("house not found", 404));
+  }
+  if (house.applicants.length) {
+    const bool = house.applicants.includes(req.user.id);
+    if (bool) {
+      const result = house.toObject();
+      result.applied = true;
+      return res.send({
+        success: true,
+        data: result,
+      });
+    }
+  }
+  if (house.approved.length) {
+    const bool = house.approved.includes(req.user.id);
+    const user = await User.findById(house.user).select("+phoneNumber +email");
+    if (bool) {
+      const result = house.toObject();
+      result.isUserApproved = true;
+      result.user = user;
+      return res.send({
+        success: true,
+        data: result,
+      });
+    }
+  }
+  if (house.rejected.length) {
+    const bool = house.rejected.includes(req.user.id);
+    if (bool) {
+      const result = job.toObject();
+      result.isUserRejected = true;
+      return res.send({
+        success: true,
+        data: result,
+      });
+    }
+  }
+  res.send({
+    success: true,
+    data: house,
+  });
 });
 
 module.exports = route;

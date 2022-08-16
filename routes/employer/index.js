@@ -180,7 +180,7 @@ route.get("/approve/:jobId/:userId", async (req, res, next) => {
               $addToSet: { approved: req.params.userId },
             })
             .updateOne({
-              $pull: { votes: { $eq: req.params.userId } },
+              $pull: { applicants: { $eq: req.params.userId } },
             });
         } else {
           return next("user not applied", 404);
@@ -204,11 +204,11 @@ route.get("/reject/:jobId/:userId", async (req, res, next) => {
         const bool = applicants.includes(req.params.userId);
         if (bool) {
           await job
-            .UpateOne({
+            .updateOne({
               $addToSet: { rejected: req.params.userId },
             })
             .house.updateOne({
-              $pull: { votes: { $eq: req.params.userId } },
+              $pull: { applicants: { $eq: req.params.userId } },
             });
         } else {
           return next("user not applied", 404);

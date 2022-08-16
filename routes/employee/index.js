@@ -72,6 +72,8 @@ route.get("/", async (req, res, next) => {
 
   const jobs = await jobQuery
     .where({ applicants: { $nin: [req.user.id] } }) //not to send applied houses
+    .where({ approved: { $nin: [req.user.id] } }) //not to send applied houses
+    .where({ rejected: { $nin: [req.user.id] } }) //not to send applied houses
     .where({ user: { $ne: mongoose.Types.ObjectId(req.user.id) } }) // not to send
     .where({ deleted: { $ne: true } }) // not to send
     .where({ isApproved: { $eq: 1 } }) // not to send
@@ -86,23 +88,36 @@ route.get("/job/:id", async (req, res) => {
   if (!job) {
     return next(new ErrorHandler("job not found", 404));
   }
-  if (job.applicants) {
+  if (job.applicants.length) {
     const bool = job.applicants.includes(req.user.id);
     if (bool) {
       const result = job.toObject();
       result.applied = true;
+
       return res.send({
         success: true,
         data: result,
       });
     }
   }
-  if (job.approved) {
+  if (job.approved.length) {
     const bool = job.approved.includes(req.user.id);
+    const user = await User.findById(job.user).select("+phoneNumber +email");
     if (bool) {
       const result = job.toObject();
-      result.approved = true;
-      result.user = req.user;
+      result.isUserApproved = true;
+      result.user = user;
+      return res.send({
+        success: true,
+        data: result,
+      });
+    }
+  }
+  if (job.rejected.length) {
+    const bool = job.rejected.includes(req.user.id);
+    if (bool) {
+      const result = job.toObject();
+      result.isUserRejected = true;
       return res.send({
         success: true,
         data: result,
@@ -189,7 +204,7 @@ route.get("/rejected", async (req, res) => {
   const size = 5;
   const houses = await jobQuery
     .where({
-      approved: { $elemMatch: { $eq: req.user.id } },
+      rejected: { $elemMatch: { $eq: req.user.id } },
     }) //not to send applied houses
     .sort({ updatedAt: -1 })
     .skip((page - 1) * size)
