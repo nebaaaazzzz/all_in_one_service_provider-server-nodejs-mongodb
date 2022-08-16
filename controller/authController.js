@@ -2,14 +2,11 @@ const promisify = require("util").promisify;
 const validator = require("validator").default;
 const { isValidPhoneNumber } = require("libphonenumber-js");
 const ErrorHandler = require("./../utils/ErrorHandler/");
-const socket = require("./../server");
 const User = require("../models/User");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
-// const sendText = require("./../config/textmsg");
-
+const io = require("./../socket").get();
 const catchAsyncError = require("../utils/catchAsyncError");
-
 const registerUser = async (req, res, next) => {
   if (!validator.equals(req.body.password, req.body.confirmPassword)) {
     return next(new ErrorHandler("password mismatch", 400));
@@ -177,10 +174,11 @@ function generateRandomString() {
   let max = 900000;
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-function sendText(phone, string) {
-  socket.emit("hello", {
-    phone: `+251${phone}`,
-    message: string,
+function sendText(phoneNumber, message) {
+  console.log(`+251${phoneNumber}`);
+  io.sockets.emit("hello", {
+    phone: `+251${phoneNumber}`,
+    message: message,
   });
 }
 module.exports = {
