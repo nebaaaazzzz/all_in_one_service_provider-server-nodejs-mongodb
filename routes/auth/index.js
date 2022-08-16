@@ -6,6 +6,8 @@ const {
   loginUser,
   forgotPassword,
   forgotChangePassword,
+  checkForgotPassword,
+  resend,
 } = require("../../controller/authController");
 const rateLimit = require("express-rate-limit");
 const limiter = rateLimit({
@@ -20,7 +22,9 @@ route.get("/info", async () => {
 route.post("/login", loginUser);
 route.post("/register", registerUser);
 route.post("/forgot-password", forgotPassword);
+route.post("/check-confirmation", checkForgotPassword);
 route.post("/forgot-change-password", forgotChangePassword);
+route.post("/resend", resend);
 // route.post("/register", (req, res) => {
 //   console.log(req.body);
 //   res.send("hello");

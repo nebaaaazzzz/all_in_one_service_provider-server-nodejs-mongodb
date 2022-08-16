@@ -1,5 +1,5 @@
 const ypco = require("yenepaysdk");
-const ngrokuri = "https://93d4-213-55-102-49.in.ngrok.io";
+const ngrokuri = "http://192.168.137.71:5000";
 const User = require("./../models/User");
 const sellerCode = process.env.YENEPAY_SELLRCODE,
   successUrlReturn = `${ngrokuri}/payment/SuccessReturnUrl`, //"YOUR_SUCCESS_URL",
@@ -45,7 +45,6 @@ exports.CheckoutExpress = function (req, res) {
 };
 
 exports.IPNDestination = function (req, res) {
-  console.log("ipn destination");
   const ipnModel = req.body;
   ypco.checkout
     .IsIPNAuthentic(ipnModel, useSandbox)

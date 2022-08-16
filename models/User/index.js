@@ -100,6 +100,7 @@ userSchema.pre(
   async function (next) {
     const query = this;
     const update = this.getUpdate();
+    console.log(update);
     if (!update?.password) {
       return next();
     }

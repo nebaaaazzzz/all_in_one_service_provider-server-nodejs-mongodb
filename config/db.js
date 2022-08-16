@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const mongodb = require("mongodb");
 mongoose.set("returnOriginal", false);
 
-mongoose.connect(process.env.MONGODB_LOCAL_URL, (err) => {
+mongoose.connect(process.env.MONGODB_URL, (err) => {
   if (err) {
     throw err;
   } else {

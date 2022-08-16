@@ -106,9 +106,7 @@ const loginUser = catchAsyncError(async (req, res, next) => {
       }
     }
   } else {
-    return next(
-      new ErrorHandler("Email/phone number and password required", 400)
-    );
+    return next(new ErrorHandler("phone number and password required", 400));
   }
 });
 
@@ -121,11 +119,14 @@ const forgotPassword = async (req, res, next) => {
       if (user) {
         if (user.verified) {
           let randString = generateRandomString();
-          const doc = await user.updateOne({
+          await user.updateOne({
             randString,
           });
+          const tempuser = await User.findOne({
+            phoneNumber: req.body.phoneNumber,
+          });
           sendText(req.body.phoneNumber, "code " + randString);
-          return res.status(201).send(doc);
+          return res.status(201).send(tempuser);
         } else {
           next(new ErrorHandler("not verified account"));
         }
@@ -139,36 +140,54 @@ const forgotPassword = async (req, res, next) => {
     return next(new ErrorHandler("some fields required", 400));
   }
 };
-const forgotChangePassword = async (req, res, next) => {
+const checkForgotPassword = async (req, res, next) => {
   const user = await User.findById(req.body.id);
   if (user) {
     if (user.randString === req.body.randString) {
-      if (req.body.password == req.body.confirmPassword) {
-        if (req.body.password > 5) {
-          await user.updateOne({
-            password: user.password,
-            randString: null,
-          });
-          res.send({
-            success: true,
-          });
-        } else {
-          next(new ErrorHandler("min password length", 400));
-        }
-      } else {
-        next(new ErrorHandler("password mismatch", 400));
-      }
-
-      return res.send({
-        success: true,
+      await user.updateOne({
+        password: user.password,
+        randString: null,
       });
+      return res.send(await User.findById(req.body.id));
     }
-    return next(new ErrorHandler("invalid conformation number", 400));
+    next(new ErrorHandler("invalid confirmation", 400));
+  }
+  next(new ErrorHandler("user not found", 400));
+};
+const forgotChangePassword = async (req, res, next) => {
+  const user = await User.findById(req.body.id);
+  if (user) {
+    if (req.body.password == req.body.confirmPassword) {
+      if (req.body.password.length > 5) {
+        await user.updateOne({
+          password: req.body.password,
+          randString: null,
+        });
+        return res.send({
+          success: true,
+        });
+      } else {
+        return next(new ErrorHandler("min password length", 400));
+      }
+    } else {
+      return next(new ErrorHandler("password mismatch", 400));
+    }
   } else {
     return next(new ErrorHandler("user not found", 400));
   }
 };
-
+const resend = async (req, res, next) => {
+  const user = await User.findById(req.body.id);
+  if (user) {
+    const randString = generateRandomString();
+    await user.updateOne({
+      randString,
+    });
+    res.send({ success: true });
+  } else {
+    return next(new ErrorHandler("user not found", 400));
+  }
+};
 function generateRandomString() {
   let min = 100000;
   let max = 900000;
@@ -183,8 +202,10 @@ function sendText(phoneNumber, message) {
 }
 module.exports = {
   registerUser,
+  checkForgotPassword,
   validateUserAccount,
   loginUser,
+  resend,
   forgotPassword,
   forgotChangePassword,
 };
