@@ -7,7 +7,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const io = require("./../socket").get();
 const catchAsyncError = require("../utils/catchAsyncError");
-const registerUser = async (req, res, next) => {
+const registerUser = catchAsyncError(async (req, res, next) => {
   if (!validator.equals(req.body.password, req.body.confirmPassword)) {
     return next(new ErrorHandler("password mismatch", 400));
   } else {
@@ -63,7 +63,7 @@ const registerUser = async (req, res, next) => {
       return next(new ErrorHandler("some fields required", 400));
     }
   }
-};
+});
 const validateUserAccount = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.body.id);
   if (user) {
@@ -79,6 +79,38 @@ const validateUserAccount = catchAsyncError(async (req, res, next) => {
     return next(new ErrorHandler("invalid conformation number", 400));
   } else {
     return next(new ErrorHandler("user not found", 400));
+  }
+});
+const loginAdmin = catchAsyncError(async (req, res, next) => {
+  if (req?.body?.phoneNumber) {
+    const user = await User.findOne({
+      phoneNumber: req.body.phoneNumber,
+    }).select("+password");
+    if (user) {
+      if (user.admin) {
+        const match = await bcrypt.compare(req?.body?.password, user.password);
+        if (match) {
+          const token = jwt.sign(
+            {
+              isAdmin: user.isAdmin,
+              sub: user.id,
+              exp: Date.now() + 15 * 24 * 60 * 60 * 60,
+            },
+            process.env.SECRETE
+          );
+
+          res.cookie("token", token, {}).send({
+            token,
+          });
+        } else {
+          return next(new ErrorHandler("wrong phone or password", 400));
+        }
+      } else {
+        return next(new ErrorHandler("not allowed", 404));
+      }
+    }
+  } else {
+    return next(new ErrorHandler("phone number and password required", 400));
   }
 });
 const loginUser = catchAsyncError(async (req, res, next) => {
@@ -110,7 +142,7 @@ const loginUser = catchAsyncError(async (req, res, next) => {
   }
 });
 
-const forgotPassword = async (req, res, next) => {
+const forgotPassword = catchAsyncError(async (req, res, next) => {
   if (req.body.phoneNumber) {
     if (isValidPhoneNumber(req.body.phoneNumber, "ET")) {
       const user = await User.findOne({
@@ -139,8 +171,8 @@ const forgotPassword = async (req, res, next) => {
   } else {
     return next(new ErrorHandler("some fields required", 400));
   }
-};
-const checkForgotPassword = async (req, res, next) => {
+});
+const checkForgotPassword = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.body.id);
   if (user) {
     if (user.randString === req.body.randString) {
@@ -153,8 +185,8 @@ const checkForgotPassword = async (req, res, next) => {
     next(new ErrorHandler("invalid confirmation", 400));
   }
   next(new ErrorHandler("user not found", 400));
-};
-const forgotChangePassword = async (req, res, next) => {
+});
+const forgotChangePassword = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.body.id);
   if (user) {
     if (req.body.password == req.body.confirmPassword) {
@@ -175,8 +207,8 @@ const forgotChangePassword = async (req, res, next) => {
   } else {
     return next(new ErrorHandler("user not found", 400));
   }
-};
-const resend = async (req, res, next) => {
+});
+const resend = catchAsyncError(async (req, res, next) => {
   const user = await User.findById(req.body.id);
   if (user) {
     const randString = generateRandomString();
@@ -187,7 +219,7 @@ const resend = async (req, res, next) => {
   } else {
     return next(new ErrorHandler("user not found", 400));
   }
-};
+});
 function generateRandomString() {
   let min = 100000;
   let max = 900000;
@@ -203,6 +235,7 @@ function sendText(phoneNumber, message) {
 module.exports = {
   registerUser,
   checkForgotPassword,
+  loginAdmin,
   validateUserAccount,
   loginUser,
   resend,

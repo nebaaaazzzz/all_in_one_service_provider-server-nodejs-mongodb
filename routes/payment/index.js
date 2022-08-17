@@ -1,3 +1,4 @@
+const catchAsyncError = require("../../utils/catchAsyncError");
 const ErrorHandler = require("../../utils/ErrorHandler");
 const {
   CheckoutExpress,
@@ -11,7 +12,7 @@ const route = require("express").Router();
 route.get(
   // "/CheckoutExpress/:userId",
   "/CheckoutExpress/:userId",
-  async (req, res, next) => {
+  catchAsyncError(async (req, res, next) => {
     const orderId = Math.floor(Math.random() * 999999 + 100000);
     const user = await User.findById(req.params.userId);
     if (user) {
@@ -22,8 +23,7 @@ route.get(
       return next();
     }
     next(new ErrorHandler("user not found", 404));
-  },
-  CheckoutExpress
+  }, CheckoutExpress)
 );
 route.get("/SuccessReturnUrl", PaymentSuccessReturnUrl);
 route.get("/failureReturnUrl", PaymentFailureUrl);

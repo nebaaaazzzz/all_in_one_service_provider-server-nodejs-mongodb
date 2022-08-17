@@ -98,9 +98,7 @@ userSchema.pre("save", async function (next) {
 userSchema.pre(
   ["updateOne", "findOneAndUpdate", "findByIdAndUpdate"],
   async function (next) {
-    const query = this;
     const update = this.getUpdate();
-    console.log(update);
     if (!update?.password) {
       return next();
     }

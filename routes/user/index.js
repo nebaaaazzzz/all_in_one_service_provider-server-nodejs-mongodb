@@ -1,11 +1,8 @@
 const route = require("express").Router();
 const multer = require("multer");
-
 const catchAsyncError = require("../../utils/catchAsyncError");
 const upload = require("./../../config/fileHandler");
-const FeedFeedback = require("./../../models/Feedback");
 const User = require("../../models/User");
-const Feedback = require("./../../models/Feedback");
 route.post(
   "/profile-pic",
   catchAsyncError(async (req, res, next) => {
@@ -30,7 +27,7 @@ route.patch(
     { name: "cv", maxCount: 1 },
     { name: "profile", maxCount: 1 },
   ]),
-  async (req, res, next) => {
+  catchAsyncError(async (req, res, next) => {
     let body;
     let cvName;
     if (req.body?.data) {
@@ -72,14 +69,16 @@ route.patch(
       return res.send({ success: true });
     }
     next(new ErrorHandler("user not found", 404));
-  }
+  })
 );
-route.patch("/change-password", async (req, res) => {
-  const doc = await User.findByIdAndUpdate(req.user.id, {
-    ...req.body,
-  });
-  res.send("success");
-});
+route.patch(
+  "/change-password",
+  catchAsyncError(async (req, res) => {
+    const doc = await User.findByIdAndUpdate(req.user.id, {
+      ...req.body,
+    });
+    res.send("success");
+  })
+);
 
-route.patch("/change-phone", async (req, res) => {});
 module.exports = route;

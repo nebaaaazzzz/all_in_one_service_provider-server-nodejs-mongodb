@@ -14,7 +14,6 @@
     "node": "16.x"
   },
   "dependencies": {
-    "@vonage/server-sdk": "^2.11.1",
     "bcrypt": "^5.0.1",
     "cors": "^2.8.5",
     "csurf": "^1.11.0",
@@ -27,7 +26,8 @@
     "method-override": "^3.0.0",
     "mongoose": "^6.3.5",
     "morgan": "^1.10.0",
-    "node-mailjet": "^5.1.1",
+    "multer-gridfs-storage": "^5.0.2",
+    "multer": "^1.4.5-lts.1",
     "passport": "^0.6.0",
     "passport-jwt": "^4.0.0",
     "randomstring": "^1.2.2",

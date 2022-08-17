@@ -51,6 +51,9 @@ module.exports = (app, io) => {
   /*middleware */
   app.use(express.json());
   // app.use("/admin", isAdmin, adminRouter);
+  app.get("/", (req, res, next) => {
+    res.send("all in one service provider");
+  });
   app.use("/admin", adminRouter);
   /*
   security

@@ -83,7 +83,7 @@ exports.PaymentSuccessReturnUrl = function (req, res) {
       }
       // res.redirect("/");
       res.send(
-        "success paid reopen the app and procceed you proceess soon it will be replaced with deeplinking"
+        "<h1>success paid reopen the app and procceed you proceess soon it will be replaced with deeplinking</h1>"
       );
     })
     .catch((err) => {
