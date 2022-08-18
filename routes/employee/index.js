@@ -3,6 +3,11 @@ const Job = require("../../models/Job");
 const User = require("./../../models/User");
 const mongoose = require("mongoose");
 const catchAsyncError = require("../../utils/catchAsyncError");
+function swapKeysAndValues(obj) {
+  const swapped = Object.entries(obj).map(([key, value]) => [value, key]);
+
+  return Object.fromEntries(swapped);
+}
 route.get(
   "/",
   catchAsyncError(async (req, res, next) => {
@@ -40,36 +45,125 @@ route.get(
     }
     if (query.region) {
       const option = "im";
-      const region = query.region;
+      const regionList = {
+        "አዲስ አበባ": "Addis Ababa",
+        አፋር: "Afar",
+        አማራ: "Amhara",
+        "ቤንሻንጉል ጉሙዝ": "Benishangul-gumuz",
+        ድሬዳዋ: "Dire Dawa",
+        ጋምቤላ: "Gambela",
+        ሀረር: "Harari",
+        ኦሮሚያ: "Oromia",
+        ሲዳማ: "Sidama",
+        ሶማሊያ: "Somali",
+        "ደቡብ ምዕራብ ኢትዮጵያ": "South West Ethiopia People's Region",
+        ትግራይ: "Tigray",
+        ደቡብ: "Southern",
+      };
+      const swappedList = swapKeysAndValues(regionList);
+
+      let filterArr = [
+        query.region,
+        ...(regionList[query.region] ? regionList[query.region] : []),
+        ...(swappedList[query.region] ? swappedList[query.region] : []),
+      ];
       jobQuery = jobQuery.where({
         $or: [
-          { region: { $eq: region } },
+          { region: { $in: filterArr } },
           { placeName: { $regex: region, $options: option } },
         ],
       });
     }
     if (query.category) {
-      const category = query.category;
+      const categoryList = {
+        "አካውንቲንግ እና ፋይናንስ": "Accounting and Finance",
+        "አስተዳደሪ እና ጸሐፊ": "Admin, Secretarial and clerk",
+        "ማስታወቂያ እና ሚዲያ": "Advertising and Media",
+        ግብርና: "Agriculture and Farming",
+        "አርክቴክቸርና እና ግንባታ": "Architecture and Construction",
+        አውቶሞቲቨ: "Automotive",
+        "ባንክ እና ኢንሹራንስ": "Banking and Insurance",
+        "ቢዝነስ ዲቨሎፕመንት": "Business Development",
+        "ንግድ እና አስተዳደር": "Business and Administration",
+        "የህዝብ ግንኙነት እና ጋዜጠኝነት": "communication, PR and Journalism",
+        "የህዝብ  አገልግሎት ስራዎች": "Community Service Jobs",
+        "ማማከር እና ስልጠና": "Consultancy and Training",
+        " የፈጠራ ጥበብ ስራዎች": "Creative Arts Jobs",
+        "የደንበኞች ግልጋሎት": "Customer Service",
+        "ልማትና የፕሮጀክት አስተዳደር": "Development and Project Managment",
+        "አካባቢ እና የተፈጥሮ ሀብቶች": "Environment and Natural Resources",
+        "ጤና ጥበቃ": "Healthcare",
+        "ሆቴል እና መስተንግዶ": "Hotel and Hospitality Jobs",
+        "የሰው ሀይል እና ቅጥር": "Humant Resources and Recruitment",
+        "ኢንፎርሜሽን ቴክኖሎጂ": "Information Technology",
+        ቋንቋ: "Languages",
+        ህጋዊ: "Legal",
+        ሎጂስቲክስ: "Logistics Transportation and Supply",
+        ጥገና: "Maintenance and repair",
+        "አስተዳደር እና ኢንዱስትሪ": "Managment and Industrial",
+        "የተፈጥሮ ሳይንስ ስራዎች": "Natural Sciences Jobs",
+        ፋርማሲ: "Pharmaceutical",
+        ግዢ: "Purchasing and Procurement",
+        "የጥራት ማረጋገጫ": "Quality Assurance",
+        "ጥናት እና ምርምር": "Research and Development",
+        "የችርቻሮ፣ የጅምላ እና ስርጭት": "Retail, Wholesale and Distribution",
+        "የሽያጭ እና ግብይት": "Sales and Marketing",
+        "ማህበራዊ ሳይንስ": "Social Sciences and Communication",
+        "ስልታዊ እቅድ": "Strategic Planning",
+        ቴሌኮሚኒኬሽን: "telecommunications",
+      };
+      const swappedList = swapKeysAndValues(categoryList);
+
+      let filterArr = [
+        query.category,
+        ...(categoryList[query.category] ? categoryList[query.category] : []),
+        ...(swappedList[query.category] ? swappedList[query.category] : []),
+      ];
       jobQuery = jobQuery.where({
-        category: { $eq: category },
+        category: { $in: filterArr },
       });
     }
     if (query.gender) {
-      const gender = query.gender;
+      const genderList = { ወንድ: "Male", ሴት: "Female" };
+      const swappedList = swapKeysAndValues(categoryList);
+
+      let filterArr = [
+        query.gender,
+        ...(genderList[query.gender] ? genderList[query.gender] : []),
+        ...(swappedList[query.gender] ? swappedList[query.gender] : []),
+      ];
       jobQuery = jobQuery.where({
-        gender: { $eq: gender },
+        gender: { $in: filterArr },
       });
     }
     if (query.permanent) {
-      const permanent = query.permanent;
+      const permanentList = { አዎ: "yes", አልፈልግም: "no" };
+      const swappedList = swapKeysAndValues(categoryList);
+
+      let filterArr = [
+        query.permanent,
+        ...(permanentList[query.permanent]
+          ? permanentList[query.permanent]
+          : []),
+        ...(swappedList[query.permanent] ? swappedList[query.permanent] : []),
+      ];
       jobQuery = jobQuery.where({
-        permanent: { $eq: permanent },
+        permanent: { $in: filterArr },
       });
     }
     if (query.cvRequired) {
-      const cvRequired = query.cvRequired;
+      const cvRequiredList = { አዎ: "yes", የማያስፈልገው: "no" };
+      const swappedList = swapKeysAndValues(categoryList);
+
+      let filterArr = [
+        query.cvRequired,
+        ...(cvRequiredList[query.cvRequired]
+          ? cvRequiredList[query.cvRequired]
+          : []),
+        ...(swappedList[query.cvRequired] ? swappedList[query.cvRequired] : []),
+      ];
       jobQuery = jobQuery.where({
-        cvRequired: { $eq: cvRequired },
+        cvRequired: { $in: filterArr },
       });
     }
 
@@ -215,7 +309,7 @@ route.get(
 );
 route.get(
   "/rejected",
-  cat(async (req, res) => {
+  catchAsyncError(async (req, res) => {
     const query = req.query;
     const jobQuery = Job.find();
     const page = query.page > 1 ? query.page : 1;

@@ -4,6 +4,11 @@ const User = require("./../../models/User");
 const mongoose = require("mongoose");
 const ErrorHandler = require("../../utils/ErrorHandler");
 const catchAsyncError = require("../../utils/catchAsyncError");
+function swapKeysAndValues(obj) {
+  const swapped = Object.entries(obj).map(([key, value]) => [value, key]);
+
+  return Object.fromEntries(swapped);
+}
 route.get("/", async (req, res, next) => {
   const query = req.query;
   let houseQuery = House.find();
@@ -44,21 +49,58 @@ route.get("/", async (req, res, next) => {
     });
   }
   if (query.region) {
-    const region = query.region;
     const option = "im";
-
+    const regionList = {
+      "አዲስ አበባ": "Addis Ababa",
+      አፋር: "Afar",
+      አማራ: "Amhara",
+      "ቤንሻንጉል ጉሙዝ": "Benishangul-gumuz",
+      ድሬዳዋ: "Dire Dawa",
+      ጋምቤላ: "Gambela",
+      ሀረር: "Harari",
+      ኦሮሚያ: "Oromia",
+      ሲዳማ: "Sidama",
+      ሶማሊያ: "Somali",
+      "ደቡብ ምዕራብ ኢትዮጵያ": "South West Ethiopia People's Region",
+      ትግራይ: "Tigray",
+      ደቡብ: "Southern",
+    };
+    const swappedList = swapKeysAndValues(regionList);
+    let filterArr = [
+      query.region,
+      ...(regionList[query.region] ? regionList[query.region] : []),
+      ...(swappedList[query.region] ? swappedList[query.region] : []),
+    ];
     houseQuery = houseQuery.where({
       $or: [
-        { region: { $eq: region } },
+        { region: { $in: filterArr } },
         { placeName: { $regex: region, $options: option } },
       ],
     });
   }
-
   if (query.propertyType) {
-    const propertyType = query.propertyType;
+    const propertyTypeList = {
+      ቪላ: "Villa",
+      አፓርትመንት: "Apartment",
+      "ጊዘያዊ ቤት": "Cottage",
+      ጎጆ: "Hut",
+      "ትንሽ ቤት": "Tiny home",
+      "እንግዳ ማረፊያ ": "Guest house",
+      ቢሮ: "Office space",
+    };
+    const swappedList = swapKeysAndValues(propertyTypeList);
+    let filterArr = [
+      query.propertyType,
+      ...(propertyTypeList[query.propertyType]
+        ? propertyTypeList[query.propertyType]
+        : []),
+      ...(swappedList[query.propertyType]
+        ? swappedList[query.propertyType]
+        : []),
+    ];
+
     houseQuery = houseQuery.where({
-      "placeDescription.title": { $eq: propertyType },
+      "placeDescription.title": { $in: filterArr },
     });
   }
   const houses = await houseQuery
