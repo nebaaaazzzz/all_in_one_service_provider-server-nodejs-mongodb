@@ -16,7 +16,10 @@ io.on("connection", (socket) => {
 
 const os = require("os");
 let HOSTNAME = "localhost";
-if (os.networkInterfaces().wlo1) {
+if (os.platform() == "win32" && os.networkInterfaces()["Wi-Fi"]) {
+  HOSTNAME = os.networkInterfaces()["Wi-Fi"][1].address;
+}
+if (os.networkInterfaces().wlo1 && os.platform() == "linux") {
   HOSTNAME = os.networkInterfaces()?.wlo1[0]?.address;
 }
 require("./app.js")(app);
