@@ -24,7 +24,7 @@ const jobSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-
+    closed: { type: Boolean, default: false },
     category: {
       type: String,
     },

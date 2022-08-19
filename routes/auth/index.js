@@ -21,7 +21,7 @@ route.get("/info", async () => {
   res.send("{info}");
 });
 route.post("/login", loginUser);
-route.post("/adminlogin", loginAdmin);
+// route.post("/adminlogin", loginAdmin);
 route.post("/register", registerUser);
 route.post("/forgot-password", forgotPassword);
 route.post("/check-confirmation", checkForgotPassword);

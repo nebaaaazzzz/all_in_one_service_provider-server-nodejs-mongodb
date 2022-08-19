@@ -215,6 +215,7 @@ const resend = catchAsyncError(async (req, res, next) => {
     await user.updateOne({
       randString,
     });
+    sendText(user.phoneNumber, randString);
     res.send({ success: true });
   } else {
     return next(new ErrorHandler("user not found", 400));

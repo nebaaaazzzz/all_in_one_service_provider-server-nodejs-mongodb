@@ -8,6 +8,7 @@ const setUp = require("./socket");
 const server = http.createServer(app);
 const io = setUp.init(server);
 io.on("connection", (socket) => {
+  console.log("connection created");
   socket.on("disconnect", () => {
     console.log("Connection disconnected", socket.id);
   });

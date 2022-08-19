@@ -46,8 +46,12 @@ route.post(
           });
           obj.houseImages = [...obj.houseImages, ...imgFilter];
         }
+        await House.findByIdAndUpdate(req.params.id, {
+          ...obj,
+          closed: false,
+        });
 
-        await house.updateOne(obj);
+        await house.updateOne({ ...obj, closed: false });
         return res.send({ success: true });
       }
     }
@@ -68,6 +72,23 @@ route.get(
       }
     }
     return next(new ErrorHandler("house not found", 404));
+  })
+);
+route.patch(
+  "/close/:id",
+  catchAsyncError(async (req, res, next) => {
+    if (validator.isMongoId(req.params.id)) {
+      const house = await House.findById(req.params.id);
+      if (house) {
+        await house.updateOne({
+          $set: { closed: true },
+        });
+        return res.send({
+          success: true,
+        });
+      }
+    }
+    next(new ErrorHandler("house not found", 404));
   })
 );
 route.delete(
@@ -191,6 +212,7 @@ route.get(
               .updateOne({
                 $pull: { applicants: { $eq: req.params.userId } },
               });
+            res.send({ sucess: true });
           } else {
             return next("user not applied", 404);
           }
@@ -222,8 +244,22 @@ route.get(
               .updateOne({
                 $pull: { applicants: { $eq: req.params.userId } },
               });
+            return res.send({ sucess: true });
           } else {
             return next("user not applied", 404);
+          }
+        } else if (house.approved.length) {
+          const approved = house.approved;
+          const bool = approved.includes(req.params.userId);
+          if (bool) {
+            await house
+              .updateOne({
+                $addToSet: { rejected: req.params.userId },
+              })
+              .updateOne({
+                $pull: { approved: { $eq: req.params.userId } },
+              });
+            return res.send({ sucess: true });
           }
         }
         return next(("no one applied", 404));
@@ -255,6 +291,7 @@ route.get(
           if (bool) {
             const result = user.toObject();
             result.approved = true;
+            console.log(result);
             return res.send(result);
           }
         }

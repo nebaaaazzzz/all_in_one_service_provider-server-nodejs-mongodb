@@ -26,6 +26,7 @@ const houseSchema = new mongoose.Schema(
         required: true,
       },
     },
+    closed: { type: Boolean, default: false },
     deleted: { type: Boolean, default: false },
     region: String,
     placeKind: {

@@ -47,6 +47,23 @@ route.get(
     next(new ErrorHandler("job not found", 404));
   })
 );
+route.patch(
+  "/close/:id",
+  catchAsyncError(async (req, res, next) => {
+    if (validator.isMongoId(req.params.id)) {
+      const job = await Job.findById(req.params.id);
+      if (job) {
+        await job.updateOne({
+          $set: { closed: true },
+        });
+        return res.send({
+          success: true,
+        });
+      }
+    }
+    next(new ErrorHandler("job not found", 404));
+  })
+);
 // route.get("/feedback", async (req, res) => {
 //   res.status(201).send({
 //     success: true,
@@ -59,7 +76,13 @@ route.patch(
     if (validator.isMongoId(req.params.id)) {
       const job = await Job.findById(req.params.id);
       if (job) {
+        await Job.findByIdAndUpdate(req.params.id, {
+          closed: false,
+          ...JSON.parse(req.body.body),
+          ...(req?.file?.filename ? { document: req.file.filename } : {}),
+        });
         await job.updateOne({
+          close: false,
           ...JSON.parse(req.body.body),
           ...(req?.file?.filename ? { document: req.file.filename } : {}),
         });
@@ -94,7 +117,7 @@ route.post(
     if (validator.isMongoId(req.params.id)) {
       const job = await Job.findById(req.params.id);
       if (job) {
-        await job.updateOne(req.body);
+        await job.updateOne({ ...req.body, closed: false });
         return res.send();
       }
     }
@@ -148,14 +171,14 @@ route.get(
     if (validator.isMongoId(req.params.id)) {
       const job = await Job.findById(req.params.id);
       if (job) {
-        if (job.arroved) {
+        if (job.approved) {
           let page = req?.query?.page;
           page = page > 1 ? page : 1;
           const pageSize = 5;
           const skip = pageSize * (page - 1);
           const limit = skip + pageSize;
-          const arroved = job.arroved.slice(skip, limit);
-          const docs = await User.find({ _id: { $in: arroved } });
+          const approved = job.approved.slice(skip, limit);
+          const docs = await User.find({ _id: { $in: approved } });
           return res.send(docs);
         }
 
@@ -190,26 +213,27 @@ route.get(
   })
 );
 route.get(
-  "/approve/:jobId/:userId",
+  "/approve/:userId/:jobId",
   catchAsyncError(async (req, res, next) => {
     if (
       validator.isMongoId(req.params.jobId) &&
       validator.isMongoId(req.params.userId)
     ) {
-      const job = await User.findById(req.params.jobId);
-      const house = await Job.findById(req.params.houseId);
-      if (job && job) {
-        if (house.applicants.length) {
-          const applicants = house.applicants;
+      const user = await User.findById(req.params.userId);
+      const job = await Job.findById(req.params.jobId);
+      if (job && user) {
+        if (job.applicants.length) {
+          const applicants = job.applicants;
           const bool = applicants.includes(req.params.userId);
           if (bool) {
             await job
-              .UpateOne({
+              .updateOne({
                 $addToSet: { approved: req.params.userId },
               })
               .updateOne({
                 $pull: { applicants: { $eq: req.params.userId } },
               });
+            res.send({ sucess: true });
           } else {
             return next("user not applied", 404);
           }
@@ -221,31 +245,45 @@ route.get(
   })
 );
 route.get(
-  "/reject/:jobId/:userId",
+  "/reject/:userId/:jobId",
   catchAsyncError(async (req, res, next) => {
     if (
       validator.isMongoId(req.params.jobId) &&
       validator.isMongoId(req.params.userId)
     ) {
-      const job = await User.findById(req.params.jobId);
-      const house = await Job.findById(req.params.houseId);
-      if (job && job) {
-        if (house.applicants.length) {
-          const applicants = house.applicants;
+      const user = await User.findById(req.params.userId);
+      const job = await Job.findById(req.params.jobId);
+      if (job && user) {
+        if (job.applicants.length) {
+          const applicants = job.applicants;
           const bool = applicants.includes(req.params.userId);
           if (bool) {
             await job
               .updateOne({
                 $addToSet: { rejected: req.params.userId },
               })
-              .house.updateOne({
+              .updateOne({
                 $pull: { applicants: { $eq: req.params.userId } },
               });
+            return res.send({ sucess: true });
           } else {
-            return next("user not applied", 404);
+            return next(new ErrorHandler("user not applied", 404));
+          }
+        } else if (job.approved.length) {
+          const approved = job.approved;
+          const bool = approved.includes(req.params.userId);
+          if (bool) {
+            await job
+              .updateOne({
+                $addToSet: { rejected: req.params.userId },
+              })
+              .updateOne({
+                $pull: { approved: { $eq: req.params.userId } },
+              });
+            return res.send({ sucess: true });
           }
         }
-        return next(("no one applied", 404));
+        return next(new ErrorHandler("no one applied", 404));
       }
     }
     next(new ErrorHandler("user or house not found", 404));
